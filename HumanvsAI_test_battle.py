@@ -1,4 +1,4 @@
-## Static Imports
+# Static Imports
 import os
 import importlib
 import gym
@@ -11,16 +11,12 @@ import numpy as np
 
 import socket
 
-<<<<<<< HEAD
-from everglades_server import server #the lower case version is different
-=======
-from everglades_server import server  #the lower case version is different
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
+from everglades_server import server  # the lower case version is different
 #from everglades_server import generate_map
 
 
 class Server:
-    ## Launch the server, return the open socket
+    # Launch the server, return the open socket
     def launch_server(self):
         # Create a TCP/IP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,11 +27,8 @@ class Server:
         sock.bind(server_address)
         return sock
 
-<<<<<<< HEAD
-=======
 
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
-## Input Variables
+# Input Variables
 # Agent files must include a class of the same name with a 'get_action' function
 # Do not include './' in file path
 if len(sys.argv) > 1:
@@ -53,8 +46,7 @@ if len(sys.argv) > 3:
 else:
     map_name = 'DemoMap.json'
 
-#if map_name == 'RandomMap.json':
-<<<<<<< HEAD
+# if map_name == 'RandomMap.json':
  #   generate_map.exec(3)
 
 config_dir = '/everglades/config/'
@@ -62,36 +54,19 @@ map_file = config_dir + map_name
 setup_file = config_dir + 'GameSetup.json'
 unit_file = config_dir + 'UnitDefinitions.json'
 output_dir = '/everglades/game_telemetry/'
-=======
-#   generate_map.exec(3)
-
-config_dir = './config/'
-map_file = config_dir + map_name
-setup_file = config_dir + 'GameSetup.json'
-unit_file = config_dir + 'UnitDefinitions.json'
-output_dir = './game_telemetry/'
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
 
 debug = False
 
-## Specific Imports
+# Specific Imports
 agent0_name, agent0_extension = os.path.splitext(agent0_file)
-<<<<<<< HEAD
-agent0_mod = importlib.import_module(agent0_name.replace('/','.'))
-agent0_class = getattr(agent0_mod, os.path.basename(agent0_name))
-
-agent1_name, agent1_extension = os.path.splitext(agent1_file)
-agent1_mod = importlib.import_module(agent1_name.replace('/','.'))
-=======
 agent0_mod = importlib.import_module(agent0_name.replace('/', '.'))
 agent0_class = getattr(agent0_mod, os.path.basename(agent0_name))
 
 agent1_name, agent1_extension = os.path.splitext(agent1_file)
 agent1_mod = importlib.import_module(agent1_name.replace('/', '.'))
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
 agent1_class = getattr(agent1_mod, os.path.basename(agent1_name))
 
-## Main Script
+# Main Script
 env = gym.make('everglades-v0')
 players = {}
 names = {}
@@ -101,34 +76,24 @@ names[0] = agent0_class.__name__
 players[1] = agent1_class(env.num_actions_per_turn, 1, map_name)
 names[1] = agent1_class.__name__
 
-<<<<<<< HEAD
 observations = env.reset(
-        players=players,
-        config_dir = config_dir,
-        map_file = map_file,
-        unit_file = unit_file,
-        output_dir = output_dir,
-        pnames = names,
-        debug = debug
+    players=players,
+    config_dir=config_dir,
+    map_file=map_file,
+    unit_file=unit_file,
+    output_dir=output_dir,
+    pnames=names,
+    debug=debug
 )
-=======
-observations = env.reset(players=players,
-                         config_dir=config_dir,
-                         map_file=map_file,
-                         unit_file=unit_file,
-                         output_dir=output_dir,
-                         pnames=names,
-                         debug=debug)
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
 
 actions = {}
 
-## Launch the server
+# Launch the server
 
 tcpServer = Server()
 sock = tcpServer.launch_server()
 
-## Game Loop
+# Game Loop
 done = 0
 while not done:
 
@@ -136,17 +101,10 @@ while not done:
         env.game.debug_state()
 
     for pid in players:
-<<<<<<< HEAD
-        if (pid != 0): ## the human player is player 0
-            actions[pid] = players[pid].get_action( observations[pid] )
-        else:
-            actions[pid] = players[pid].get_action( observations[pid], sock )
-=======
-        if (pid != 0):  ## the human player is player 0
+        if (pid != 0):  # the human player is player 0
             actions[pid] = players[pid].get_action(observations[pid])
         else:
             actions[pid] = players[pid].get_action(observations[pid], sock)
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
 
     observations, reward, done, info = env.step(actions)
 
