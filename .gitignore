@@ -12,3 +12,6 @@
 
 # Ignore specific game telemetry directories
 **/game_telemetry/**
+
+# Ignore venv
+*.venv
