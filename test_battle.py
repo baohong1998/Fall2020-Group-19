@@ -73,6 +73,6 @@ while not done:
         actions[pid] = players[pid].get_action(observations[pid])
 
     observations, reward, done, info = env.step(actions)
-    #pdb.set_trace()
+    pdb.set_trace()
 
 print(reward)
