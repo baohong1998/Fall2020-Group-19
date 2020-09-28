@@ -7,8 +7,13 @@ import json
 import socket
 import sys
 
+<<<<<<< HEAD
 class human_actions:
 
+=======
+
+class human_actions:
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
     def launch_server(self):
         # Create a TCP/IP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,7 +39,13 @@ class human_actions:
             connection, client_address = sock.accept()
 
             try:
+<<<<<<< HEAD
                 print('waiting for client data', client_address, file=sys.stderr)
+=======
+                print('waiting for client data',
+                      client_address,
+                      file=sys.stderr)
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                 fullDataString = ""
                 # Receive the data in small chunks and retransmit it
                 while True:
@@ -44,7 +55,12 @@ class human_actions:
                     #fullDataString = fullDataString + repr(data)
 
                     if data:
+<<<<<<< HEAD
                         print('sending data back to the client', file=sys.stderr)
+=======
+                        print('sending data back to the client',
+                              file=sys.stderr)
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                         connection.sendall(data)
                         #print('nothing')
                     else:
@@ -64,7 +80,13 @@ class human_actions:
 
                         self.actions = self.convertInputToActions(clientInput)
                         for i in range(0, self.num_actions):
+<<<<<<< HEAD
                             print("Group " + str(self.actions[i][0]) + " is moving to Node " + str(self.actions[i][1]))
+=======
+                            print("Group " + str(self.actions[i][0]) +
+                                  " is moving to Node " +
+                                  str(self.actions[i][1]))
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
 
                         connection.sendall("turn success".encode('utf-8'))
                         return
@@ -77,9 +99,15 @@ class human_actions:
         self.action_space = action_space
         self.num_groups = 12
 
+<<<<<<< HEAD
         self.actions = "" # output
 
         with open('/everglades/config/' + map_name) as fid:
+=======
+        self.actions = ""  # output
+
+        with open('./config/' + map_name) as fid:
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
             self.map_dat = json.load(fid)
 
         self.nodes_array = []
@@ -92,6 +120,7 @@ class human_actions:
         self.shape = (self.num_actions, 2)
 
         self.unit_config = {
+<<<<<<< HEAD
             0: [('controller',1), ('striker', 5)],# 6
             1: [('controller',3), ('striker', 3), ('tank', 3)],# 15
             2: [('tank',5)],# 20
@@ -104,6 +133,20 @@ class human_actions:
             9: [('controller', 2), ('striker', 4)],# 61
             10: [('striker', 9)],# 70
             11: [('controller', 20), ('striker', 8), ('tank', 2)]# 100
+=======
+            0: [('controller', 1), ('striker', 5)],  # 6
+            1: [('controller', 3), ('striker', 3), ('tank', 3)],  # 15
+            2: [('tank', 5)],  # 20
+            3: [('controller', 2), ('tank', 4)],  # 26
+            4: [('striker', 10)],  # 36
+            5: [('controller', 4), ('striker', 2)],  # 42
+            6: [('striker', 4)],  # 46
+            7: [('controller', 1), ('striker', 2), ('tank', 3)],  # 52
+            8: [('controller', 3)],  # 55
+            9: [('controller', 2), ('striker', 4)],  # 61
+            10: [('striker', 9)],  # 70
+            11: [('controller', 20), ('striker', 8), ('tank', 2)]  # 100
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
         }
 
     def get_action(self, obs, sock):
@@ -132,13 +175,17 @@ class human_actions:
         tokens = self.parseIntoTokens(stringToParse)
         return self.translateTokens(tokens)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
     def parseIntoTokens(self, stringToParse):
         #need to parse out the 'b'
         tokens = list()
         tempToken = ""
 
         for i in range(0, len(stringToParse)):
+<<<<<<< HEAD
             if((stringToParse[i] != " ") & (stringToParse[i] != ",") &(i != len(stringToParse) - 1)):
                 if(stringToParse[i] == "'"):
                     if(i <= len(stringToParse)):
@@ -147,16 +194,34 @@ class human_actions:
                 elif(stringToParse[i] == "b"):
                     if(i <= len(stringToParse)):
                         if(stringToParse[i+1] == "'"):
+=======
+            if ((stringToParse[i] != " ") & (stringToParse[i] != ",") &
+                (i != len(stringToParse) - 1)):
+                if (stringToParse[i] == "'"):
+                    if (i <= len(stringToParse)):
+                        if (stringToParse[i + 1] == "b"):
+                            i = i + 2
+                elif (stringToParse[i] == "b"):
+                    if (i <= len(stringToParse)):
+                        if (stringToParse[i + 1] == "'"):
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                             i = i + 1
                         else:
                             tempToken = tempToken + stringToParse[i]
                     else:
                         tempToken = tempToken + stringToParse[i]
                 else:
+<<<<<<< HEAD
                     if(stringToParse[i] != "'"):
                         tempToken = tempToken + stringToParse[i]
             elif(i == len(stringToParse)-1):
                 if(stringToParse[i] != "'"):
+=======
+                    if (stringToParse[i] != "'"):
+                        tempToken = tempToken + stringToParse[i]
+            elif (i == len(stringToParse) - 1):
+                if (stringToParse[i] != "'"):
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                     tempToken = tempToken + stringToParse[i]
                 tokens.append(tempToken)
             else:
@@ -164,11 +229,18 @@ class human_actions:
                 tempToken = ""
 
         #for i in range(0, len(tokens)):
+<<<<<<< HEAD
             #for j in range(0, len(tokens[i])):
 
         #for i in range(0, len(tokens)):
             #print("token "+str(i)+": "+tokens[i])
 
+=======
+        #for j in range(0, len(tokens[i])):
+
+        #for i in range(0, len(tokens)):
+        #print("token "+str(i)+": "+tokens[i])
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
 
         return tokens
 
@@ -187,15 +259,23 @@ class human_actions:
         searchingForGroupNumber = False
         searchingForNodeNumber = False
 
+<<<<<<< HEAD
         
 
         for i in range(0, len(tokens)):
             if((searchingForGroupNumber == False) & (searchingForNodeNumber == False)):
                 if(groupIndex == nodeIndex):
+=======
+        for i in range(0, len(tokens)):
+            if ((searchingForGroupNumber == False) &
+                (searchingForNodeNumber == False)):
+                if (groupIndex == nodeIndex):
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                     if (str.upper(tokens[i]) == keywordGroup):
                         searchingForGroupNumber = True
                         #print("GROUP FOUND. searching for a Group Number Now")
                     #else:
+<<<<<<< HEAD
                         #print("(1) " + tokens[i] + " is a filler word")
                 elif(groupIndex > nodeIndex):
                     if(str.upper(tokens[i]) == keywordNode):
@@ -208,17 +288,40 @@ class human_actions:
                     #print("groupIndex < nodeIndex")
             elif(tokens[i].isdigit() == True):
                 if(searchingForGroupNumber == True):
+=======
+                    #print("(1) " + tokens[i] + " is a filler word")
+                elif (groupIndex > nodeIndex):
+                    if (str.upper(tokens[i]) == keywordNode):
+                        searchingForNodeNumber = True
+                        #print("NODE FOUND. searching for a Node Number Now")
+                    #else:
+                    #print("tokens[i] is "+str.upper(tokens[i])+" and keywordNote is "+keywordNode)
+                    #print("(2) " + tokens[i] + " is a filler word")
+                #else:
+                #print("groupIndex < nodeIndex")
+            elif (tokens[i].isdigit() == True):
+                if (searchingForGroupNumber == True):
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                     arrayOfActions[groupIndex][0] = tokens[i]
                     #print("Group "+str(groupIndex + 1)+" the token is "+ tokens[i])
                     searchingForGroupNumber = False
                     groupIndex = groupIndex + 1
+<<<<<<< HEAD
                 elif(searchingForNodeNumber == True):
+=======
+                elif (searchingForNodeNumber == True):
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
                     #print("Node "+str(nodeIndex + 1)+" the token is "+ tokens[i])
                     arrayOfActions[nodeIndex][1] = tokens[i]
                     searchingForNodeNumber = False
                     nodeIndex = nodeIndex + 1
             #else:
+<<<<<<< HEAD
                 #print("(3) " + tokens[i] + " is a filler word")
 
         
+=======
+            #print("(3) " + tokens[i] + " is a filler word")
+
+>>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
         return arrayOfActions
