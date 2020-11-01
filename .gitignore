@@ -13,13 +13,3 @@
 # Ignore specific game telemetry directories
 **/game_telemetry/**
 **/Telemetry/**
-<<<<<<< HEAD
-=======
-
-
-# Ignore venv
-venv
-
-# Ignore .vscode
-.vscode
->>>>>>> cc0a606dc9d28927d2d03363b69585e3a25fea87
