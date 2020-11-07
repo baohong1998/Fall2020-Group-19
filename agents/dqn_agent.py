@@ -45,6 +45,8 @@ def OurModel(input_shape, action_space):
 
 
 class DQNAgent(Player):
+
+    # init the dqn agent with hyperparams
     def __init__(self, action_space, player_num, map_name):
         super().__init__(action_space, player_num, map_name)
 
@@ -59,6 +61,7 @@ class DQNAgent(Player):
         self.train_start = 500
         self.winRate = 1.0
 
+    # additional init variables, mostly env related
     def set_init_state(self, env, players,
                        config_dir, map_file, unit_file, output_dir, names, debug):
         self.env = env
@@ -75,22 +78,28 @@ class DQNAgent(Player):
         self.model = OurModel(input_shape=(self.state_size,),
                               action_space=self.action_size)
 
+    # function to store states into the memory and apply epsilon decay (exploration rate decay)
     def remember(self, obs, action, reward, next_obs, done):
         self.memory.append((obs, action, reward, next_obs, done))
         if len(self.memory) > self.train_start:
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
+    # replay the memory
     def replay(self):
         if len(self.memory) < self.train_start:
             return
 
+        # pull random batch_size (e.g 64) states from the memory
         minibatch = random.sample(self.memory, min(
             len(self.memory), self.batch_size))
+
+        # empty objects to store collected different attr of states in the current batch
         states = np.zeros((self.batch_size, self.state_size))
         next_states = np.zeros((self.batch_size, self.state_size))
         action, reward, done = [], [], []
 
+        # collect and store states in the current batch before Q value processing
         for i in range(self.batch_size):
             states[i] = minibatch[i][0]
             action.append(minibatch[i][1])
@@ -98,10 +107,14 @@ class DQNAgent(Player):
             next_states[i] = minibatch[i][3]
             done.append(minibatch[i][4])
 
+        # make a prediction for the states in the current batch
         target = self.model.predict(states)
         # print(target[0])
+
+        # same thing for next state
         target_next = self.model.predict(next_states)
 
+        # update the q values for the best actions of a state in the current batch
         for i in range(self.batch_size):
             # correction on the Q value for the action used
             if done[i]:
@@ -118,11 +131,46 @@ class DQNAgent(Player):
                     target[i][action[i][0][a]] = reward[i] + \
                         self.gamma * target_next[i][max_next[a]]
 
+        # train the model with the new q values
         self.model.fit(states, target, batch_size=self.batch_size, verbose=2)
 
+    # helper functions for calculate the winrate
+    def get_winrate(self, curWin, totalGame):
+        return curWin/totalGame
+
+    # the function does 2 things:
+    # - explore a new state
+    # - or make an action based on the model prediction
+    def act(self, obs):
+        if np.random.random_sample() <= self.epsilon:
+            return Player.get_action(self, obs)
+        else:
+            return self.get_action(obs)
+
+    # get prediction (q values) of all actions and get the 7 best ones
+    def get_action(self, obs):
+        action = np.zeros(self.shape)
+        pred = self.model.predict(obs)
+        maxIndices = (-pred[0]).argsort()[:self.num_actions]
+        for i in range(0, self.num_actions):
+            action[i] = self.action_choices[maxIndices[i]]
+        return (maxIndices, action)
+
+    # save model
+    def save(self, name):
+        self.model.save(name)
+
+    # load model
+    def load(self, name):
+        self.model = load_model(name)
+
+    # train the AI
     def run(self):
+
+        # variable for track number of win games by dqn agent
         i = 0
         for e in range(self.EPISODES):
+            # reset env for every new game
             state = env.reset(
                 players=self.players,
                 config_dir=self.config_dir,
@@ -136,32 +184,50 @@ class DQNAgent(Player):
             done = False
             while not done:
                 agent_move = None
+
+                # actions of both dqn and rand agent since the env need both actions before step() to the next state
                 actions = {}
                 for pid in self.players:
+                    # dqn agent makes a move
                     if pid == self.player_num:
                         state[pid] = np.reshape(
                             state[pid], [1, self.state_size])
                         agent_move = self.act(state[pid])
                         actions[pid] = agent_move[1]
+                    # the other agent makes a move
                     else:
                         actions[pid] = self.players[pid].get_action(state[pid])[
                             1]
 
+                # get the next state
                 next_state, reward, done, _ = self.env.step(actions)
+
+                # reshapte before feed to the model
                 next_state[self.player_num] = np.reshape(
                     next_state[self.player_num], [1, self.state_size])
                 # print(agent_move)
+
+                # store the current state into the memory
                 self.remember(state[self.player_num], agent_move,
                               reward[self.player_num], next_state[self.player_num], done)
+
+                # move to the next state
                 state = next_state
 
+                # post game processing
                 if done:
                     print("reward", reward)
+
+                    # if dqn agent win, increment i
                     if reward[self.player_num] == 1:
                         i += 1
+
+                    # get winrate of dqn agent
                     next_winrate = self.get_winrate(i, e+1)
                     self.winRate = next_winrate
                     print("Current winrate: {:2}".format(self.winRate))
+
+                    # save the model every 100 games
                     if e % 100 == 0:
                         print(
                             "Saving trained model as everglades-dqn-{}-{:2}.h5 with win rate at: {:2}".format(e+1, next_winrate, next_winrate))
@@ -170,34 +236,15 @@ class DQNAgent(Player):
 
                     print("episode: {}/{}, win: {}, e: {:.2}".format(e+1,
                                                                      self.EPISODES, i, self.epsilon))
+
+                    # save and quit after win 500 games
                     if i == 500:
                         print("Saving trained model as everglades-dqn.h5")
                         self.save("everglades-dqn.h5")
                         return
+
+                # replay buffer
                 self.replay()
-
-    def get_winrate(self, curWin, totalGame):
-        return curWin/totalGame
-
-    def act(self, obs):
-        if np.random.random_sample() <= self.epsilon:
-            return Player.get_action(self, obs)
-        else:
-            return self.get_action(obs)
-
-    def get_action(self, obs):
-        action = np.zeros(self.shape)
-        pred = self.model.predict(obs)
-        maxIndices = (-pred[0]).argsort()[:self.num_actions]
-        for i in range(0, self.num_actions):
-            action[i] = self.action_choices[maxIndices[i]]
-        return (maxIndices, action)
-
-    def save(self, name):
-        self.model.save(name)
-
-    def load(self, name):
-        self.model = load_model(name)
 
 
 if __name__ == "__main__":
