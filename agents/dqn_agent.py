@@ -7,11 +7,13 @@ import sys
 from keras.optimizers import Adam
 from keras.layers import Input, Dense
 from keras.models import Model, load_model
-from player import Player
+from agents.player import Player
 from collections import deque
 import numpy as np
 import random
 from everglades_server import server
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+
 
 # create model
 
@@ -27,11 +29,11 @@ def OurModel(input_shape, action_space):
     # Hidden layer with 256 nodes
     X = Dense(256, activation="relu", kernel_initializer='he_uniform')(X)
 
-    # Hidden layer with 64 nodes
-    X = Dense(64, activation="relu", kernel_initializer='he_uniform')(X)
+    # # Hidden layer with 64 nodes
+    #X = Dense(128, activation="relu", kernel_initializer='he_uniform')(X)
 
     # Output Layer with # of actions
-    X = Dense(action_space, activation="softmax",
+    X = Dense(action_space, activation="linear",
               kernel_initializer='he_uniform')(X)
 
     model = Model(inputs=X_input, outputs=X, name='Everglades-DQN-model')
@@ -51,10 +53,11 @@ class DQNAgent(Player):
 
         self.gamma = 0.95    # discount rate
         self.epsilon = 1.0  # exploration rate
-        self.epsilon_min = 0.001
+        self.epsilon_min = 0.04
         self.epsilon_decay = 0.999
         self.batch_size = 64
-        self.train_start = 1000
+        self.train_start = 500
+        self.winRate = 1.0
 
     def set_init_state(self, env, players,
                        config_dir, map_file, unit_file, output_dir, names, debug):
@@ -96,6 +99,7 @@ class DQNAgent(Player):
             done.append(minibatch[i][4])
 
         target = self.model.predict(states)
+        # print(target[0])
         target_next = self.model.predict(next_states)
 
         for i in range(self.batch_size):
@@ -108,9 +112,11 @@ class DQNAgent(Player):
                 # DQN chooses the max Q value among next actions
                 # selection and evaluation of action is on the target Q Network
                 # Q_max = max_a' Q_target(s', a')
-                for a in action[i][0]:
-                    target[i][a] = reward[i] + \
-                        self.gamma * (np.amax(target_next[i]))
+                # print(target_next[i])
+                max_next = (-target_next[i]).argsort()[:self.num_actions]
+                for a in range(0, len(action[i][0])):
+                    target[i][action[i][0][a]] = reward[i] + \
+                        self.gamma * target_next[i][max_next[a]]
 
         self.model.fit(states, target, batch_size=self.batch_size, verbose=2)
 
@@ -138,11 +144,13 @@ class DQNAgent(Player):
                         agent_move = self.act(state[pid])
                         actions[pid] = agent_move[1]
                     else:
-                        actions[pid] = self.players[pid].get_action(state[pid])
+                        actions[pid] = self.players[pid].get_action(state[pid])[
+                            1]
 
                 next_state, reward, done, _ = self.env.step(actions)
                 next_state[self.player_num] = np.reshape(
                     next_state[self.player_num], [1, self.state_size])
+                # print(agent_move)
                 self.remember(state[self.player_num], agent_move,
                               reward[self.player_num], next_state[self.player_num], done)
                 state = next_state
@@ -151,6 +159,15 @@ class DQNAgent(Player):
                     print("reward", reward)
                     if reward[self.player_num] == 1:
                         i += 1
+                    next_winrate = self.get_winrate(i, e+1)
+                    self.winRate = next_winrate
+                    print("Current winrate: {:2}".format(self.winRate))
+                    if e % 100 == 0:
+                        print(
+                            "Saving trained model as everglades-dqn-{}-{:2}.h5 with win rate at: {:2}".format(e+1, next_winrate, next_winrate))
+                        self.save(
+                            "everglades-dqn-{}-{:2}.h5".format(e+1, next_winrate))
+
                     print("episode: {}/{}, win: {}, e: {:.2}".format(e+1,
                                                                      self.EPISODES, i, self.epsilon))
                     if i == 500:
@@ -159,9 +176,12 @@ class DQNAgent(Player):
                         return
                 self.replay()
 
+    def get_winrate(self, curWin, totalGame):
+        return curWin/totalGame
+
     def act(self, obs):
-        if np.random.random() <= self.epsilon:
-            return ([], Player.get_action(self, obs))
+        if np.random.random_sample() <= self.epsilon:
+            return Player.get_action(self, obs)
         else:
             return self.get_action(obs)
 
@@ -173,11 +193,11 @@ class DQNAgent(Player):
             action[i] = self.action_choices[maxIndices[i]]
         return (maxIndices, action)
 
-    def load(self, name):
-        self.model = load_model(name)
-
     def save(self, name):
         self.model.save(name)
+
+    def load(self, name):
+        self.model = load_model(name)
 
 
 if __name__ == "__main__":

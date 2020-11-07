@@ -4,6 +4,7 @@ import time
 import json
 import gym
 import gym_everglades
+import random
 
 
 class Player:
@@ -54,8 +55,8 @@ class Player:
 
     def get_action(self, obs):
         action = np.zeros(self.shape)
-        action[:, 0] = np.random.choice(
-            self.num_groups, self.num_actions, replace=False)
-        action[:, 1] = np.random.choice(
-            self.nodes_array, self.num_actions, replace=False)
-        return action
+        action_idx = random.sample(
+            range(0, len(self.action_choices)), self.num_actions)
+        for i in range(0, self.num_actions):
+            action[i] = self.action_choices[action_idx[i]]
+        return (action_idx, action)

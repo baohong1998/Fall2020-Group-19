@@ -32,7 +32,7 @@ setup_file = config_dir + 'GameSetup.json'
 unit_file = config_dir + 'UnitDefinitions.json'
 output_dir = './game_telemetry/'
 
-debug = 1
+debug = 0
 
 # Specific Imports
 agent0_name, agent0_extension = os.path.splitext(agent0_file)
@@ -53,28 +53,31 @@ names[0] = agent0_class.__name__
 players[1] = agent1_class(env.num_actions_per_turn, 1, map_name)
 names[1] = agent1_class.__name__
 
-observations = env.reset(
-    players=players,
-    config_dir=config_dir,
-    map_file=map_file,
-    unit_file=unit_file,
-    output_dir=output_dir,
-    pnames=names,
-    debug=debug
-)
-
 actions = {}
 
 # Game Loop
 done = 0
-while not done:
-    if debug:
-        env.game.debug_state()
-    for pid in players:
-        actions[pid] = players[pid].get_action(observations[pid])
+total_score = {names[0]: 0, names[1]: 0}
+for e in range(100):
+    observations = env.reset(
+        players=players,
+        config_dir=config_dir,
+        map_file=map_file,
+        unit_file=unit_file,
+        output_dir=output_dir,
+        pnames=names,
+        debug=debug
+    )
+    done = False
 
-    observations, reward, done, info = env.step(actions)
-    print("obs", observations, reward)
+    while not done:
+        if debug:
+            env.game.debug_state()
+        for pid in players:
+            actions[pid] = players[pid].get_action(observations[pid])
+            print(actions[pid])
 
-
-print(reward)
+        observations, reward, done, info = env.step(actions)
+    print(reward)
+    total_score[names[0]] += reward[0]
+    total_score[names[1]] += reward[1]
