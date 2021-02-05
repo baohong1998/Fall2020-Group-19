@@ -74,7 +74,7 @@ class Trainer:
 
         for step in range(self.max_steps):
             epsilon = self._exploration(step)
-            #print(epsilon)
+            # print(epsilon)
             action_idx = []
             action = {}
             for pid in self.players:
@@ -125,18 +125,18 @@ class Trainer:
                     save_best(self.model, all_winrate,
                               "Evergaldes", self.output_dir)
 
-            self.memory.push((
+            self.memory.store(
                 state[self.player_num],
                 action_idx,
                 reward[self.player_num],
                 next_state[self.player_num],
                 done
-            ))
+            )
             state = next_state
 
             if step > self.start_learning:
                 loss = self.model.update_policy(
-                    self.memory.sample(self.batch_size))
+                    self.memory.miniBatch(self.batch_size), self.memory)
                 w.add_scalar("loss/loss", loss, global_step=step)
 
             if step % self.save_update_freq == 0:

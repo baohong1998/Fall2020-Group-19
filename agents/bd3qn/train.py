@@ -4,7 +4,7 @@ import gym
 import utils
 
 from config import Configuration
-from memoryreplay import MemoryReplay
+from per_buffer import PERBuffer
 from models import BranchingDQN
 from trainer import Trainer
 import os
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     action_space = env.num_actions_per_turn
     action_bins = env.num_groups * env.num_nodes
     # Prepare Experience Memory Replay
-    memory = MemoryReplay(config.capacity)
+    memory = PERBuffer(observation_space, action_space, config.capacity)
 
     # Prepare agent
     # agent = BranchingDQN(

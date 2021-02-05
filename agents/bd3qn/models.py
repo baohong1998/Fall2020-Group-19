@@ -70,9 +70,8 @@ class BranchingDQN(nn.Module):
 
         return action.detach().cpu().numpy()  # action.numpy()
 
-    def update_policy(self, batch):
-        batch_states, batch_actions, batch_rewards, batch_next_states, batch_done = batch
-
+    def update_policy(self, batch, memory):
+        batch_states, batch_actions, batch_rewards, batch_next_states, batch_done, batch_weights, batch_indxs = batch
         states = torch.tensor(batch_states).float().to(self.device)
         actions = torch.tensor(batch_actions).long().reshape(
             states.shape[0], -1, 1).to(self.device)
@@ -96,10 +95,16 @@ class BranchingDQN(nn.Module):
 
         #print("Current Q", current_Q)
         expected_Q = rewards + max_next_Q * self.gamma
+        errors = torch.abs(expected_Q - current_Q).cpu().data.numpy()
+
+        memory.update_priorities(batch_indxs, errors)
 
         #print("Expect Q", expected_Q)
-        loss = F.mse_loss(expected_Q, current_Q)
-        print("loss", loss)
+        batch_weights = torch.from_numpy(batch_weights).float()
+        batch_weights = batch_weights.to(self.device)
+        loss = (batch_weights *
+                F.mse_loss(current_Q, expected_Q)).mean()
+        #print("loss", loss)
         self.optim.zero_grad()
         loss.backward()
 
