@@ -10,12 +10,14 @@ from trainer import Trainer
 import os
 import importlib
 import gym_everglades
+
 import sys
 sys.path.append('/mnt/d/everglades-ai-wargame/')
 if __name__ == '__main__':
 
     # Get configuration
-    config = Configuration("config.json")
+    config_file = sys.argv[1]
+    config = Configuration(config_file)
 
     # Specific Imports
 
@@ -28,6 +30,7 @@ if __name__ == '__main__':
     torch.cuda.init()
     device = torch.device(
         config.device if torch.cuda.is_available() else "cpu")
+    torch.autograd.set_detect_anomaly(True)
 
     # Information about environments
 
@@ -67,13 +70,15 @@ if __name__ == '__main__':
         gamma=config.gamma,
         hidden_dim=config.hidden_dim,
         td_target=config.td_target,
-        device=device
+        device=device,
+        exploration_method=config.exploration_method
     )
 
     players[0] = rand_player
     names[0] = rand_player.__class__.__name__
     players[1] = bdqn_player
     names[1] = bdqn_player.__class__.__name__
+
     # Prepare Trainer
     trainer = Trainer(
         model=bdqn_player,
@@ -87,6 +92,7 @@ if __name__ == '__main__':
         start_learning=config.start_learning,
         batch_size=config.batch_size,
         save_update_freq=config.save_update_freq,
+        exploration_method=config.exploration_method,
         output_dir=config.output_dir,
         players=players,
         player_num=1,
@@ -95,7 +101,7 @@ if __name__ == '__main__':
         unit_file=config.unit_file,
         env_output_dir=config.env_output_dir,
         pnames=names,
-        debug=config.debug
+        debug=config.debug,
     )
 
     # Train

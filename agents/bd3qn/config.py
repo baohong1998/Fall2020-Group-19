@@ -22,6 +22,7 @@ class Configuration:
 
         # Training
         self.target_update_freq = config['training']['target_update_freq']
+
         self.start_learning = config['training']['start_learning']
         self.lr = config['training']['learning_rate']
         self.max_steps = config['training']['max_steps']
@@ -41,6 +42,7 @@ class Configuration:
         assert self.td_target in ("mean", "max", "individual")
         self.gamma = config['model']['gamma']
         self.hidden_dim = config['model']['hidden_dim']
+        self.exploration_method = config['model']['exploration']
 
         # Device
         self.device = config['device']

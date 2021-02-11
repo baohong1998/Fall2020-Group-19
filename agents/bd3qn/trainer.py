@@ -3,6 +3,8 @@ import numpy as np
 from torch.utils import tensorboard
 
 from utils import save_checkpoint, save_best, build_action_table
+from datetime import datetime
+import os
 
 
 class Trainer:
@@ -17,6 +19,7 @@ class Trainer:
                  start_learning,
                  batch_size,
                  save_update_freq,
+                 exploration_method,
                  output_dir,
                  players,
                  player_num,
@@ -47,6 +50,7 @@ class Trainer:
         self.env_output_dir = env_output_dir
         self.pnames = pnames
         self.debug = debug
+        self.exploration_method = exploration_method
         self.nodes_array = []
         for i in range(1, self.env.num_nodes + 1):
             self.nodes_array.append(i)
@@ -71,6 +75,12 @@ class Trainer:
         all_winrate = []
         highest_winrate = 0
         w = tensorboard.SummaryWriter()
+        time = datetime.now().strftime('%Y%m%d_%H%M%S')
+        path = './runs/{}/'.format(self.output_dir)
+        try:
+            os.makedirs(path)
+        except:
+            pass
 
         for step in range(self.max_steps):
             epsilon = self._exploration(step)
@@ -79,15 +89,18 @@ class Trainer:
             action = {}
             for pid in self.players:
                 if pid == self.player_num:
-                    if np.random.random_sample() > epsilon:
+                    # print(self.exploration_method)
+                    if self.exploration_method == "Noisy" or np.random.random_sample() > epsilon:
                         action_idx = self.model.get_action(state[pid])
                         action[pid] = np.zeros(
                             (self.env.num_actions_per_turn, 2))
                         for n in range(0, len(action_idx)):
                             action[pid][n][0] = self.action_table[action_idx[n]][0]
                             action[pid][n][1] = self.action_table[action_idx[n]][1]
+                        # print(action[pid])
 
                     else:
+                        #print("not here")
                         action_idx = np.random.choice(
                             len(self.action_table), size=7)
                         action[pid] = np.zeros(
@@ -117,6 +130,8 @@ class Trainer:
                     len(all_winrate), reward))
                 episode_winrate = (num_of_wins/total_games_played) * 100
                 all_winrate.append(episode_winrate)
+                with open(os.path.join(path, "rewards-{}.txt".format(time)), 'a') as fout:
+                    fout.write("{}\n".format(episode_winrate))
                 print("Current winrate: {}%".format(episode_winrate))
                 w.add_scalar("winrate",
                              episode_winrate, global_step=len(all_winrate))
@@ -137,6 +152,8 @@ class Trainer:
             if step > self.start_learning:
                 loss = self.model.update_policy(
                     self.memory.miniBatch(self.batch_size), self.memory)
+                with open(os.path.join(path, "loss-{}.txt".format(time)), 'a') as fout:
+                    fout.write("{}\n".format(loss))
                 w.add_scalar("loss/loss", loss, global_step=step)
 
             if step % self.save_update_freq == 0:

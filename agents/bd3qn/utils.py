@@ -46,6 +46,7 @@ def _save(agent, rewards, env_name, output_dir, model_type):
         os.path.join(path, 'rewards.csv'), index=False)
 
 
+
 def save_checkpoint(agent, rewards, env_name, output_dir):
     _save(agent, rewards, env_name, output_dir, "_last")
 

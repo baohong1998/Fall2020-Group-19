@@ -13,7 +13,8 @@ sys.path.append('/mnt/d/everglades-ai-wargame/')
 if __name__ == "__main__":
 
     # Get configuration
-    config = Configuration("config.json")
+    config_file = sys.argv[1]
+    config = Configuration(config_file)
 
     # Prepare environment
     env = gym.make('everglades-v0')
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     )
     bdqn_player_num = 1
     bdqn_player.load_state_dict(torch.load(
-        './runs/{}/model_state_dict_last'.format(config.output_dir)))
+        './runs/Newton-train-2-7-21-res/model_state_dict_best'))
     bdqn_player.to(device)
     players[0] = rand_player
     players[1] = bdqn_player
@@ -91,7 +92,7 @@ if __name__ == "__main__":
 
                 else:
                     action[pid] = rand_player.get_action(state[pid])
-            # print(action)
+            print(action)
             state, reward, done, info = env.step(action)
 
             if done:
