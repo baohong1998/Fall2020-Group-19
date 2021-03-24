@@ -83,6 +83,7 @@ class BranchingDQN(nn.Module):
         self.td_target = td_target
 
     def get_action(self, x):
+        turn = x[0]
         x = torch.from_numpy(x).float()
         x = x.to(self.device)
         with torch.no_grad():
@@ -90,11 +91,18 @@ class BranchingDQN(nn.Module):
                 self.policy_network.sample_noise()
             out = self.policy_network(x).squeeze(0)
             action = torch.argmax(out, dim=1)
-
+        #print("Turn {}:".format(turn), action, out.max(1, keepdim=True))
         return action.detach().cpu().numpy()  # action.numpy()
 
     def update_policy(self, batch, memory):
-        batch_states, batch_actions, batch_rewards, batch_next_states, batch_done, batch_weights, batch_indxs = batch
+        sample, batch_indxs, batch_weights = batch
+        
+        batch_states = sample[0]
+        batch_actions = sample[1]
+        batch_rewards = sample[2]
+        batch_next_states = sample[3]
+        batch_done = sample[4]
+
         states = torch.tensor(batch_states).float().to(self.device)
         actions = torch.tensor(batch_actions).long().reshape(
             states.shape[0], -1, 1).to(self.device)
@@ -122,7 +130,7 @@ class BranchingDQN(nn.Module):
         #print("Current Q", current_Q)
         expected_Q = rewards + max_next_Q * self.gamma
         errors = torch.abs(expected_Q - current_Q).cpu().data.numpy()
-
+        #print("Expect:", expected_Q, "Current:", current_Q, "Error:", errors)
         #print("Expect Q", expected_Q)
         batch_weights = torch.from_numpy(batch_weights).float()
         batch_weights = batch_weights.to(self.device)

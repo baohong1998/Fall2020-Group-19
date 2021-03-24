@@ -5,6 +5,7 @@ import utils
 
 from config import Configuration
 from per_buffer import PERBuffer
+from per_alt import PrioritizedReplayBuffer
 from models import BranchingDQN
 from trainer import Trainer
 from everglades_renderer import Renderer
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     action_space = env.num_actions_per_turn
     action_bins = env.num_groups * env.num_nodes
     # Prepare Experience Memory Replay
-    memory = PERBuffer(observation_space, action_space, config.capacity)
+    memory = PrioritizedReplayBuffer(config.capacity)
     renderer = Renderer(config.map_file)
     # Prepare agent
     # agent = BranchingDQN(

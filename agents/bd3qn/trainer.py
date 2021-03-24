@@ -83,13 +83,18 @@ class Trainer:
             os.makedirs(path)
         except:
             pass
+        
+        total_turn_played = 0
+        turn_played_by_network = 0
 
         for step in range(self.max_steps):
             epsilon = self._exploration(step)
             self.renderer.render(state)
             # print(epsilon)
+            
             action_idx = []
             action = {}
+            total_turn_played += 1
             for pid in self.players:
                 if pid == self.player_num:
                     # print(self.exploration_method)
@@ -101,7 +106,7 @@ class Trainer:
                             action[pid][n][0] = self.action_table[action_idx[n]][0]
                             action[pid][n][1] = self.action_table[action_idx[n]][1]
                         # print(action[pid])
-
+                        turn_played_by_network += 1
                     else:
                         #print("not here")
                         action_idx = np.random.choice(
@@ -129,21 +134,23 @@ class Trainer:
                 if reward[self.player_num] == 1:
                     num_of_wins += 1
                 total_games_played += 1
-                print("Result on game {}: {}".format(
-                    len(all_winrate), reward))
+                print("Result on game {}: {}. Number of moves made by the network: {}/{}".format(
+                    len(all_winrate), reward, turn_played_by_network, total_turn_played))
                 episode_winrate = (num_of_wins/total_games_played) * 100
                 all_winrate.append(episode_winrate)
                 with open(os.path.join(path, "rewards-{}.txt".format(time)), 'a') as fout:
-                    fout.write("{}\n".format(episode_winrate))
+                    fout.write("Winrate: {}. Number of moves made by the network: {}/{}\n".format(episode_winrate, turn_played_by_network, total_turn_played))
                 print("Current winrate: {}%".format(episode_winrate))
                 w.add_scalar("winrate",
                              episode_winrate, global_step=len(all_winrate))
+                turn_played_by_network = 0
+                total_turn_played = 0
                 if episode_winrate > highest_winrate:
                     highest_winrate = episode_winrate
                     save_best(self.model, all_winrate,
                               "Evergaldes", self.output_dir)
 
-            self.memory.store(
+            self.memory.add(
                 state[self.player_num],
                 action_idx,
                 reward[self.player_num],

@@ -5,6 +5,7 @@ import time
 class random_actions:
     def __init__(self, action_space, player_num):
         self.action_space = action_space
+        self.player_num = player_num
         self.num_groups = 12
 
         self.num_nodes = 11

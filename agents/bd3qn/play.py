@@ -6,6 +6,7 @@ import utils
 import gym
 from config import Configuration
 from models import BranchingQNetwork
+from everglades_renderer import Renderer
 import numpy as np
 import sys
 sys.path.append('/mnt/d/everglades-ai-wargame/')
@@ -21,6 +22,7 @@ if __name__ == "__main__":
     players = {}
     names = {}
 
+    renderer = Renderer(config.map_file)
     # Global initialization
     torch.cuda.init()
     device = torch.device(
@@ -39,17 +41,19 @@ if __name__ == "__main__":
         rand_agent_name.replace('../', 'agents.'))
     rand_agent_class = getattr(
         rand_agent_mod, os.path.basename(rand_agent_name))
-    rand_player = rand_agent_class(env.num_actions_per_turn, 0, map_name)
+    rand_player = rand_agent_class(env.num_actions_per_turn, 0)
 
     bdqn_player = BranchingQNetwork(
         observation_space=observation_space,
         action_space=action_space,
         action_bins=action_bins,
         hidden_dim=config.hidden_dim,
+        exploration_method=config.exploration_method
     )
     bdqn_player_num = 1
     bdqn_player.load_state_dict(torch.load(
-        './runs/Newton-train-2-7-21-res/model_state_dict_best'))
+        './runs/Mean/model_state_dict_last'))
+    bdqn_player.eval()
     bdqn_player.to(device)
     players[0] = rand_player
     players[1] = bdqn_player
@@ -73,6 +77,7 @@ if __name__ == "__main__":
         done = False
         action = {}
         while not done:
+            renderer.render(state)
             for pid in players:
                 if pid != rand_player.player_num:
                     state[pid] = torch.from_numpy(
@@ -92,7 +97,7 @@ if __name__ == "__main__":
 
                 else:
                     action[pid] = rand_player.get_action(state[pid])
-            print(action)
+            #print(action)
             state, reward, done, info = env.step(action)
 
             if done:
