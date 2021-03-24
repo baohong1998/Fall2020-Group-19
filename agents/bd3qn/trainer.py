@@ -28,7 +28,8 @@ class Trainer:
                  unit_file,
                  env_output_dir,
                  pnames,
-                 debug):
+                 debug,
+                 renderer):
         self.model = model
         self.env = env
         self.memory = memory
@@ -52,6 +53,7 @@ class Trainer:
         self.debug = debug
         self.exploration_method = exploration_method
         self.nodes_array = []
+        self.renderer = renderer
         for i in range(1, self.env.num_nodes + 1):
             self.nodes_array.append(i)
 
@@ -84,6 +86,7 @@ class Trainer:
 
         for step in range(self.max_steps):
             epsilon = self._exploration(step)
+            self.renderer.render(state)
             # print(epsilon)
             action_idx = []
             action = {}

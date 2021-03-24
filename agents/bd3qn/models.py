@@ -12,9 +12,11 @@ class BranchingQNetwork(nn.Module):
         self.exploration_method = exploration_method
         if self.exploration_method == "Noisy":
             self.model = nn.Sequential(
-                NoisyLinear(observation_space, hidden_dim),
+                NoisyLinear(observation_space, hidden_dim*4),
                 nn.ReLU(),
-                NoisyLinear(hidden_dim, hidden_dim),
+                NoisyLinear(hidden_dim*4, hidden_dim*2),
+                nn.ReLU(),
+                NoisyLinear(hidden_dim*2, hidden_dim),
                 nn.ReLU()
             )
             self.value_head = NoisyLinear(hidden_dim, 1)
@@ -22,9 +24,11 @@ class BranchingQNetwork(nn.Module):
                 [NoisyLinear(hidden_dim, action_bins) for i in range(action_space)])
         else:
             self.model = nn.Sequential(
-                nn.Linear(observation_space, hidden_dim),
+                nn.Linear(observation_space, hidden_dim*4),
                 nn.ReLU(),
-                nn.Linear(hidden_dim, hidden_dim),
+                nn.Linear(hidden_dim*4, hidden_dim*2),
+                nn.ReLU(),
+                nn.Linear(hidden_dim*2, hidden_dim),
                 nn.ReLU()
             )
             self.value_head = nn.Linear(hidden_dim, 1)

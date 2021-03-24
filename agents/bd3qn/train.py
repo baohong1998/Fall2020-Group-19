@@ -7,6 +7,7 @@ from config import Configuration
 from per_buffer import PERBuffer
 from models import BranchingDQN
 from trainer import Trainer
+from everglades_renderer import Renderer
 import os
 import importlib
 import gym_everglades
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     action_bins = env.num_groups * env.num_nodes
     # Prepare Experience Memory Replay
     memory = PERBuffer(observation_space, action_space, config.capacity)
-
+    renderer = Renderer(config.map_file)
     # Prepare agent
     # agent = BranchingDQN(
     #     observation_space=observation_space,
@@ -59,7 +60,7 @@ if __name__ == '__main__':
         rand_agent_name.replace('../', 'agents.'))
     rand_agent_class = getattr(
         rand_agent_mod, os.path.basename(rand_agent_name))
-    rand_player = rand_agent_class(env.num_actions_per_turn, 0, map_name)
+    rand_player = rand_agent_class(env.num_actions_per_turn, 0)
 
     bdqn_player = BranchingDQN(
         observation_space=observation_space,
@@ -102,6 +103,7 @@ if __name__ == '__main__':
         env_output_dir=config.env_output_dir,
         pnames=names,
         debug=config.debug,
+        renderer=renderer
     )
 
     # Train
