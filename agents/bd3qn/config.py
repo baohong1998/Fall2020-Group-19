@@ -22,11 +22,13 @@ class Configuration:
 
         # Training
         self.target_update_freq = config['training']['target_update_freq']
-
+        self.multi_steps = config['training']['multi_steps']
         self.start_learning = config['training']['start_learning']
         self.lr = config['training']['learning_rate']
         self.max_steps = config['training']['max_steps']
         self.max_episodes = config['training']['max_episodes']
+        self.strategy_file = config['training']['strategy_file']
+        self.swarm_method = config['training']['swarm_method']
 
         # Memory replay
         self.capacity = config['memory_replay']['capacity']
@@ -38,6 +40,7 @@ class Configuration:
         self.dpi = config['output']['dpi']
 
         # Model
+        self.architecture = config['model']['architecture']
         self.td_target = config['model']['temporal_difference_target']
         assert self.td_target in ("mean", "max", "individual")
         self.gamma = config['model']['gamma']
@@ -46,3 +49,8 @@ class Configuration:
 
         # Device
         self.device = config['device']
+
+    
+        
+        
+        

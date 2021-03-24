@@ -2,10 +2,12 @@ import importlib
 import torch
 import gym
 import utils
+from ppretty import ppretty
 
 from config import Configuration
-from per_buffer import PERBuffer
+from per_alt import PrioritizedReplayMemory
 from models import BranchingDQN
+from everglades_renderer import Renderer
 from trainer import Trainer
 import os
 import importlib
@@ -19,6 +21,7 @@ if __name__ == '__main__':
     config_file = sys.argv[1]
     config = Configuration(config_file)
 
+    print(ppretty(config))
     # Specific Imports
 
     # Prepare environment
@@ -34,12 +37,12 @@ if __name__ == '__main__':
 
     # Information about environments
 
-    observation_space = env.observation_space.shape[0]
+    observation_space = 62
     action_space = env.num_actions_per_turn
     action_bins = env.num_groups * env.num_nodes
     # Prepare Experience Memory Replay
-    memory = PERBuffer(observation_space, action_space, config.capacity)
-
+    memory = PrioritizedReplayMemory(config.capacity)
+    renderer = Renderer(config.map_file)
     # Prepare agent
     # agent = BranchingDQN(
     #     observation_space=observation_space,
@@ -53,13 +56,13 @@ if __name__ == '__main__':
     #     device=device
     # )
     map_name = config.map_file
-    rand_agent_file = "../random_actions"
+    rand_agent_file = config.strategy_file
     rand_agent_name, rand_agent_extension = os.path.splitext(rand_agent_file)
     rand_agent_mod = importlib.import_module(
-        rand_agent_name.replace('../', 'agents.'))
+        rand_agent_name.replace('agents/', 'agents.'))
     rand_agent_class = getattr(
         rand_agent_mod, os.path.basename(rand_agent_name))
-    rand_player = rand_agent_class(env.num_actions_per_turn, 0, map_name)
+    rand_player = rand_agent_class(env.num_actions_per_turn, 0)
 
     bdqn_player = BranchingDQN(
         observation_space=observation_space,
@@ -71,8 +74,52 @@ if __name__ == '__main__':
         hidden_dim=config.hidden_dim,
         td_target=config.td_target,
         device=device,
-        exploration_method=config.exploration_method
+        exploration_method=config.exploration_method,
+        architecture=config.architecture,
+        multi_steps=config.multi_steps
     )
+
+    #independent networks
+    bdqn_independent_models = []
+
+    for i in range(0, env.num_groups):
+        bdqn_independent_models.append(
+            BranchingDQN(
+                observation_space=observation_space,
+                action_space=action_space,
+                action_bins=action_bins,
+                target_update_freq=config.target_update_freq,
+                learning_rate=config.lr,
+                gamma=config.gamma,
+                hidden_dim=config.hidden_dim,
+                td_target=config.td_target,
+                device=device,
+                exploration_method=config.exploration_method,
+                architecture=config.architecture,
+                multi_steps=config.multi_steps
+            )
+        )
+    
+    #Group type
+    bd3qn_type_models = []
+
+    for i in range(0, 3):
+        bd3qn_type_models.append(
+            BranchingDQN(
+                observation_space=observation_space,
+                action_space=action_space,
+                action_bins=action_bins,
+                target_update_freq=config.target_update_freq,
+                learning_rate=config.lr,
+                gamma=config.gamma,
+                hidden_dim=config.hidden_dim,
+                td_target=config.td_target,
+                device=device,
+                exploration_method=config.exploration_method,
+                architecture=config.architecture,
+                multi_steps=config.multi_steps
+            )
+        )
 
     players[0] = rand_player
     names[0] = rand_player.__class__.__name__
@@ -82,6 +129,9 @@ if __name__ == '__main__':
     # Prepare Trainer
     trainer = Trainer(
         model=bdqn_player,
+        bdqn_independent_models = bdqn_independent_models,
+        bd3qn_type_models = bd3qn_type_models,
+        swarm_method=config.swarm_method,
         env=env,
         memory=memory,
         max_steps=config.max_steps,
@@ -102,7 +152,10 @@ if __name__ == '__main__':
         env_output_dir=config.env_output_dir,
         pnames=names,
         debug=config.debug,
+        renderer = renderer
     )
 
     # Train
     trainer.loop()
+
+

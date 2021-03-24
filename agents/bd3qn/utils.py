@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 import random
-
+from OneHotEncode import OneHotEncode
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 
@@ -22,6 +22,22 @@ def build_action_table(num_groups, num_nodes):
         node_id += 1
     return action_choices
 
+# hard code size for now
+def state_pre_processing(obs):
+    new_obs = OneHotEncode(obs)
+    node_info = new_obs[:45]
+    groups_info = new_obs[45:]
+    split_groups_info = []
+    i = 0
+    while i < len(groups_info):
+        #print("nodes", node_info)
+        #print("groups", groups_info[i:i+17])
+        group = np.concatenate((node_info, groups_info[i:i+17]))
+        #print("group", group)
+        split_groups_info.append(group)
+        i = i + 17
+    return split_groups_info
+    
 
 def _save(agent, rewards, env_name, output_dir, model_type):
 

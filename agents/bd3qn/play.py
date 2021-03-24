@@ -46,10 +46,11 @@ if __name__ == "__main__":
         action_space=action_space,
         action_bins=action_bins,
         hidden_dim=config.hidden_dim,
+        exploration_method=config.exploration_method
     )
     bdqn_player_num = 1
-    bdqn_player.load_state_dict(torch.load(
-        './runs/Newton-train-2-7-21-res/model_state_dict_best'))
+    bdqn_player.load_state_dict(torch.load(sys.argv[2]))
+    bdqn_player.eval()
     bdqn_player.to(device)
     players[0] = rand_player
     players[1] = bdqn_player
@@ -78,6 +79,8 @@ if __name__ == "__main__":
                     state[pid] = torch.from_numpy(
                         state[pid]).float().to(device)
                     with torch.no_grad():
+                        # if bdqn_player.exploration_method == "Noisy":
+                        #     bdqn_player.sample_noise()
                         action_idx = bdqn_player(state[pid]).squeeze(0)
                         # .numpy().reshape(-1)
                         action_idx = torch.argmax(
@@ -92,7 +95,7 @@ if __name__ == "__main__":
 
                 else:
                     action[pid] = rand_player.get_action(state[pid])
-            print(action)
+            #print(action)
             state, reward, done, info = env.step(action)
 
             if done:
@@ -100,6 +103,7 @@ if __name__ == "__main__":
                     total_wins += 1
                 game_played += 1
                 winrate = (total_wins/game_played) * 100
+
         print("Game result: {}".format(reward))
         print("Winrate for Episode {}/{}: {:.2f}%".format(episode,
                                                           config.max_episodes, winrate))

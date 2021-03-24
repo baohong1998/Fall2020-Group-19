@@ -9,29 +9,33 @@
   },
   "exploration": {
     "epsilon_start": 1,
-    "epsilon_final": 0.25,
-    "epsilon_decay": 80000
+    "epsilon_final": 0.01,
+    "epsilon_decay": 8000
   },
   "training": {
     "target_update_freq": 3000,
-    "start_learning": 200,
+    "start_learning": 2000,
     "learning_rate": 0.0001,
     "max_steps": 10000000,
-    "max_episodes": 25000
+    "max_episodes": 100,
+    "strategy_file": "agents/random_actions",
+    "multi_steps": 3,
+    "swarm_method": "Independent"
   },
   "memory_replay": {
     "capacity": 131072,
     "batch_size": 128
   },
   "model": {
-    "temporal_difference_target": "mean",
-    "exploration": "Noisy",
+    "architecture" : "Dueling",
+    "temporal_difference_target": "max",
+    "exploration": "Epsilon",
     "gamma": 0.99,
     "hidden_dim": 128
   },
   "output": {
     "save_update_freq": 20,
-    "directory": "Mean",
+    "directory": "max",
     "dpi": 72
   },
   "device": "cuda:0"

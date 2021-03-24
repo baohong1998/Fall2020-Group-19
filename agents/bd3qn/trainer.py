@@ -1,14 +1,14 @@
 import numpy as np
-
+from random import sample
 from torch.utils import tensorboard
 
-from utils import save_checkpoint, save_best, build_action_table
+from utils import save_checkpoint, save_best, build_action_table, state_pre_processing
 from datetime import datetime
 import os
-
+import time as delay
 
 class Trainer:
-    def __init__(self, model,
+    def __init__(self, model, bdqn_independent_models, bd3qn_type_models, swarm_method,
                  env,
                  memory,
                  max_steps,
@@ -28,8 +28,12 @@ class Trainer:
                  unit_file,
                  env_output_dir,
                  pnames,
-                 debug):
+                 debug,
+                 renderer):
         self.model = model
+        self.bdqn_independent_models = bdqn_independent_models
+        self.bd3qn_type_models = bd3qn_type_models
+        self.swarm_method = swarm_method
         self.env = env
         self.memory = memory
         self.max_steps = max_steps
@@ -51,6 +55,7 @@ class Trainer:
         self.pnames = pnames
         self.debug = debug
         self.exploration_method = exploration_method
+        self.renderer = renderer
         self.nodes_array = []
         for i in range(1, self.env.num_nodes + 1):
             self.nodes_array.append(i)
@@ -83,22 +88,39 @@ class Trainer:
             pass
 
         for step in range(self.max_steps):
+            self.renderer.render(state)
             epsilon = self._exploration(step)
             # print(epsilon)
             action_idx = []
             action = {}
             for pid in self.players:
                 if pid == self.player_num:
-                    # print(self.exploration_method)
+                    per_swarm_states = state_pre_processing(state[pid])
                     if self.exploration_method == "Noisy" or np.random.random_sample() > epsilon:
-                        action_idx = self.model.get_action(state[pid])
-                        action[pid] = np.zeros(
-                            (self.env.num_actions_per_turn, 2))
-                        for n in range(0, len(action_idx)):
-                            action[pid][n][0] = self.action_table[action_idx[n]][0]
-                            action[pid][n][1] = self.action_table[action_idx[n]][1]
-                        # print(action[pid])
-
+                        acts = []
+                        if self.swarm_method == "Single network":
+                            for idx, s in enumerate(per_swarm_states):
+                                chose_next_location = self.model.get_action(s)
+                                acts.append(([idx, chose_next_location[0]], chose_next_location[1]))
+                        elif self.swarm_method == "Group by type":
+                            for idx, s in enumerate(per_swarm_states):
+                                types = per_swarm_states[11:14]
+                                t = types.index(1)
+                                chose_next_location = self.bd3qn_type_models[t].get_action(s)
+                                acts.append(([idx, chose_next_location[0]], chose_next_location[1]))
+                        else:
+                            for idx, s in enumerate(per_swarm_states):
+                                chose_next_location = self.bdqn_independent_models[idx].get_action(s)
+                                acts.append(([idx, chose_next_location[0]], chose_next_location[1]))
+                        print("acts", acts)
+                        acts.sort(key=lambda tup: tup[1], reverse=True)
+                        acts = sample(acts, 7)
+                        action[pid] = []
+                        for i in range(0, 7):
+                            action[pid].append(acts[i][0])
+                        action[pid] = np.array(action[pid])
+                        print("actions", action[pid])
+                        
                     else:
                         #print("not here")
                         action_idx = np.random.choice(
@@ -140,21 +162,34 @@ class Trainer:
                     save_best(self.model, all_winrate,
                               "Evergaldes", self.output_dir)
 
-            self.memory.store(
+            self.memory.push((
                 state[self.player_num],
                 action_idx,
                 reward[self.player_num],
                 next_state[self.player_num],
-                done
+                done)
             )
+            
             state = next_state
+            
 
             if step > self.start_learning:
-                loss = self.model.update_policy(
-                    self.memory.miniBatch(self.batch_size), self.memory)
-                with open(os.path.join(path, "loss-{}.txt".format(time)), 'a') as fout:
-                    fout.write("{}\n".format(loss))
-                w.add_scalar("loss/loss", loss, global_step=step)
+                if self.swarm_method == "Single network":
+                    for i in range(0, len(self.bdqn_independent_models)):
+                        loss = self.model.update_policy(
+                            self.memory.sample(self.batch_size), self.memory, i)
+                elif self.swarm_method == "Group by type":
+                    for g in self.bd3qn_type_models:
+                        loss = g.update_policy(
+                            self.memory.sample(self.batch_size), self.memory, idx)
+                else:
+                    for idx, g in enumerate(self.bdqn_independent_models):
+                        loss = g.update_policy(
+                            self.memory.sample(self.batch_size), self.memory, idx)
+
+                # with open(os.path.join(path, "loss-{}.txt".format(time)), 'a') as fout:
+                #     fout.write("{}\n".format(loss))
+                # w.add_scalar("loss/loss", loss, global_step=step)
 
             if step % self.save_update_freq == 0:
                 save_checkpoint(self.model, all_winrate,
