@@ -4,10 +4,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from noisy_net import NoisyLinear, NoisyFactorizedLinear
-
+from OneHotEncode import OneHotEncode
 
 class BranchingQNetwork(nn.Module):
-    def __init__(self, observation_space, action_space, action_bins, hidden_dim, exploration_method):
+    def __init__(self, observation_space, action_space, action_bins, hidden_dim, exploration_method="Epsilon"):
         super().__init__()
         self.exploration_method = exploration_method
         if self.exploration_method == "Noisy":
@@ -23,19 +23,20 @@ class BranchingQNetwork(nn.Module):
             self.adv_heads = nn.ModuleList(
                 [NoisyLinear(hidden_dim, action_bins) for i in range(action_space)])
         else:
-            self.model = nn.Sequential(
+            self.model = nn.ModuleList([nn.Sequential(
                 nn.Linear(observation_space, hidden_dim*4),
                 nn.ReLU(),
                 nn.Linear(hidden_dim*4, hidden_dim*2),
                 nn.ReLU(),
                 nn.Linear(hidden_dim*2, hidden_dim),
                 nn.ReLU()
-            )
+            ) for i in range(12)])
             self.value_head = nn.Linear(hidden_dim, 1)
             self.adv_heads = nn.ModuleList(
-                [nn.Linear(hidden_dim, action_bins) for i in range(action_space)])
+                [nn.Linear(hidden_dim, 11) for i in range(action_space)])
 
     def forward(self, x):
+        x = OneHotEncode(x)
         out = self.model(x)
         value = self.value_head(out)
         if value.shape[0] == 1:
