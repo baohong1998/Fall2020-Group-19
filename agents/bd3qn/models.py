@@ -49,6 +49,7 @@ class BranchingQNetwork(nn.Module):
     def sample_noise(self):
         self.model[0].sample_noise()
         self.model[2].sample_noise()
+        self.model[4].sample_noise()
         self.value_head.sample_noise()
         for l in self.adv_heads:
             l.sample_noise()
@@ -91,7 +92,8 @@ class BranchingDQN(nn.Module):
                 self.policy_network.sample_noise()
             out = self.policy_network(x).squeeze(0)
             action = torch.argmax(out, dim=1)
-        #print("Turn {}:".format(turn), action, out.max(1, keepdim=True))
+
+        #print("Turn {}:".format(turn), out.max(1, keepdim = True))
         return action.detach().cpu().numpy()  # action.numpy()
 
     def update_policy(self, batch, memory):

@@ -111,14 +111,14 @@ class Cycle_Target_Node:
                 # from original all cycle code
                 actions[i] = [self.group_num, nextNode]
                 self.group_num = (self.group_num + 1) % self.grouplen
-            print(actions)
+            #print(actions)
             return actions
     
     def update_groups(self, obs):
         i = 45
         index = 0
         while i < 101:
-            print("index: " + str(index) + ", i: " + str(i))
+            #print("index: " + str(index) + ", i: " + str(i))
             self.group_location[index] = obs[i]
             self.group_movable[index] = obs[i + 3]
             i += 5

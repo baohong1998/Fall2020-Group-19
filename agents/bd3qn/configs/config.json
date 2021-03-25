@@ -20,8 +20,8 @@
     "max_episodes": 25000
   },
   "memory_replay": {
-    "capacity": 65536,
-    "batch_size": 64
+    "capacity": 64,
+    "batch_size": 5
   },
   "model": {
     "temporal_difference_target": "mean",

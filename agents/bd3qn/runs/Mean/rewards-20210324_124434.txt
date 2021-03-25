@@ -1,2 +1,0 @@
-Winrate: 0.0. Number of moves made by the network: 0/0
-Winrate: 50.0. Number of moves made by the network: 0/0

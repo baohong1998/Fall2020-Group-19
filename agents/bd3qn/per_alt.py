@@ -40,9 +40,12 @@ class PrioritizedReplayBuffer(object):
     def _add(self, obs_t, action, reward, obs_tp1, done): # self, state, policy_output, reward, last_state, done
         data = (obs_t, action, reward, obs_tp1, done)
 
-        self._storage.append(data)
-
-        self._next_idx += 1
+        if self._next_idx >= len(self._storage):
+            self._storage.append(data)
+        else:
+            self._storage[self._next_idx] = data
+        
+        self._next_idx = (self._next_idx + 1) % self._maxsize
     
     def _remove(self, num_samples):
         del self._storage[:num_samples]
@@ -64,7 +67,7 @@ class PrioritizedReplayBuffer(object):
 
     def add(self, state, policy_output, reward, last_state, done): # self, state, policy_output, reward, last_state, done
         idx = self._next_idx
-        assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
+        #assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
 
         self._add(state, policy_output, reward, last_state, done)
         self._it_sum[idx] = self._max_priority ** self._alpha
@@ -151,6 +154,8 @@ class PrioritizedReplayBuffer(object):
         """
         assert len(idxes) == len(priorities)
         for idx, priority in zip(idxes, priorities):
+            if(priority <= 0):
+                priority += 1e-8
             assert priority > 0
             assert 0 <= idx < len(self._storage)
             self._it_sum[idx] = priority ** self._alpha

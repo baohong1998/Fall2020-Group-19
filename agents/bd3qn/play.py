@@ -4,6 +4,7 @@ import os
 import gym_everglades
 import utils
 import gym
+from OneHotEncode import OneHotEncode
 from config import Configuration
 from models import BranchingQNetwork
 from everglades_renderer import Renderer
@@ -29,7 +30,7 @@ if __name__ == "__main__":
         config.device if torch.cuda.is_available() else "cpu")
 
     # Information about environments
-    observation_space = env.observation_space.shape[0]
+    observation_space = 249
     action_space = env.num_actions_per_turn
     action_bins = env.num_groups * env.num_nodes
 
@@ -80,21 +81,22 @@ if __name__ == "__main__":
             renderer.render(state)
             for pid in players:
                 if pid != rand_player.player_num:
-                    state[pid] = torch.from_numpy(
-                        state[pid]).float().to(device)
+                    encode_state = OneHotEncode(state[pid])
+                    encode_state = torch.from_numpy(
+                        encode_state).float().to(device)
                     with torch.no_grad():
-                        action_idx = bdqn_player(state[pid]).squeeze(0)
+                        action_idx = bdqn_player(encode_state).squeeze(0)
                         # .numpy().reshape(-1)
                         action_idx = torch.argmax(
                             action_idx, dim=1).reshape(-1)
                     action_idx = action_idx.detach().cpu().numpy()  # .reshape(-1)
                     action[pid] = np.zeros(
                         (env.num_actions_per_turn, 2))
-                    # print(action_idx)
+                    
                     for n in range(0, len(action_idx)):
                         action[pid][n][0] = action_table[action_idx[n]][0]
                         action[pid][n][1] = action_table[action_idx[n]][1]
-
+                    print(action[pid])
                 else:
                     action[pid] = rand_player.get_action(state[pid])
             #print(action)
