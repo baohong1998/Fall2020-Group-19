@@ -13,15 +13,15 @@
     "epsilon_decay": 20000
   },
   "training": {
-    "target_update_freq": 3000,
-    "start_learning": 2000,
+    "target_update_freq": 750,
+    "start_learning": 512,
     "learning_rate": 0.0001,
     "max_steps": 10000000,
     "max_episodes": 25000
   },
   "memory_replay": {
-    "capacity": 65536,
-    "batch_size": 64
+    "capacity": 1024,
+    "batch_size": 16
   },
   "model": {
     "temporal_difference_target": "mean",
