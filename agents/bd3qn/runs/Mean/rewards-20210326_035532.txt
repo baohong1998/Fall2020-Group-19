@@ -1,0 +1,4 @@
+Winrate: 0.0. Number of moves made by the network: 0/150. Agents: Cycle_BRush_Turn25
+Winrate: 50.0. Number of moves made by the network: 2/150. Agents: base_rushV1
+Winrate: 66.66666666666666. Number of moves made by the network: 2/150. Agents: cycle_targetedNode11
+Winrate: 50.0. Number of moves made by the network: 3/51. Agents: random_actions

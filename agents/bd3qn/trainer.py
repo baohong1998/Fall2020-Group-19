@@ -121,30 +121,35 @@ class Trainer:
             self.renderer.render(state)
             # print(epsilon)
             
-            action_idx = []
+            # action_idx = []
             action = {}
             total_turn_played += 1
             for pid in self.players:
                 if pid == self.player_num:
                     # print(self.exploration_method)
                     if self.exploration_method == "Noisy" or np.random.random_sample() > epsilon:
-                        action_idx = self.model.get_action(OneHotEncode(state[pid]))
-                        action[pid] = np.zeros(
-                            (self.env.num_actions_per_turn, 2))
-                        for n in range(0, len(action_idx)):
-                            action[pid][n][0] = self.action_table[action_idx[n]][0]
-                            action[pid][n][1] = self.action_table[action_idx[n]][1]
+                        action[pid]= self.model.get_action(state[pid])
+                        # action[pid] = np.zeros(
+                        #     (self.env.num_actions_per_turn, 2))
+                        # for n in range(0, len(action_idx)):
+                        #     action[pid][n][0] = self.action_table[action_idx[n]][0]
+                        #     action[pid][n][1] = self.action_table[action_idx[n]][1]
                         # print(action[pid])
                         turn_played_by_network += 1
                     else:
-                        #print("not here")
-                        action_idx = np.random.choice(
-                            len(self.action_table), size=7)
-                        action[pid] = np.zeros(
-                            (self.env.num_actions_per_turn, 2))
-                        for n in range(0, len(action_idx)):
-                            action[pid][n][0] = self.action_table[action_idx[n]][0]
-                            action[pid][n][1] = self.action_table[action_idx[n]][1]
+                        agent_id = 0
+                        if pid == 0:
+                            agent_id = 1
+                        
+                        action[pid] = self.players[agent_id].get_action(state[pid])
+                        # print("not here")
+                        # action_idx = np.random.choice(
+                        #     len(self.action_table), size=7)
+                        # action[pid] = np.zeros(
+                        #     (self.env.num_actions_per_turn, 2))
+                        # for n in range(0, len(action_idx)):
+                        #     action[pid][n][0] = self.action_table[action_idx[n]][0]
+                        #     action[pid][n][1] = self.action_table[action_idx[n]][1]
                 else:
                     action[pid] = self.players[pid].get_action(state[pid])
 
@@ -192,7 +197,7 @@ class Trainer:
 
             self.memory.add(
                 OneHotEncode(state[self.player_num]),
-                action_idx,
+                action[self.player_num],
                 reward[self.player_num],
                 OneHotEncode(next_state[self.player_num]),
                 done

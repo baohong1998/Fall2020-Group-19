@@ -1,0 +1,3 @@
+Winrate: 100.0. Number of moves made by the network: 1/150. Agents: same_commands
+Winrate: 50.0. Number of moves made by the network: 3/150. Agents: random_actions
+Winrate: 33.33333333333333. Number of moves made by the network: 1/150. Agents: Cycle_BRush_Turn25

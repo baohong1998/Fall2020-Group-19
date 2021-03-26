@@ -14,14 +14,14 @@
   },
   "training": {
     "target_update_freq": 3000,
-    "start_learning": 2000,
+    "start_learning": 512,
     "learning_rate": 0.0001,
     "max_steps": 10000000,
-    "max_episodes": 25000
+    "max_episodes": 800
   },
   "memory_replay": {
-    "capacity": 64,
-    "batch_size": 5
+    "capacity": 1024,
+    "batch_size": 16
   },
   "model": {
     "temporal_difference_target": "mean",

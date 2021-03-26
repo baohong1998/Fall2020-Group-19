@@ -66,4 +66,4 @@ observation2 = [  99.,    0.,    0.,  500.,    0.,    0.,    1.,   53.,   13.,
           1.,    1.,   12.,    0.,    5.,    6.,    2.,    0.,    0.,
           0.,    4.,    0.,   85.,    0.,   12.]
 
-print(OneHotEncode(observation))
+#print(OneHotEncode(observation))

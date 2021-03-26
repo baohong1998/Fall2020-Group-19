@@ -1,0 +1,14 @@
+Winrate: 0.0. Number of moves made by the network: 0/150. Agents: random_actions
+Winrate: 50.0. Number of moves made by the network: 0/150. Agents: cycle_targetedNode11P2
+Winrate: 66.66666666666666. Number of moves made by the network: 0/37. Agents: random_actions
+Winrate: 50.0. Number of moves made by the network: 0/150. Agents: random_actions
+Winrate: 40.0. Number of moves made by the network: 1/150. Agents: random_actions
+Winrate: 50.0. Number of moves made by the network: 3/150. Agents: Cycle_Target_Node
+Winrate: 42.857142857142854. Number of moves made by the network: 8/150. Agents: Cycle_BRush_Turn50
+Winrate: 37.5. Number of moves made by the network: 8/150. Agents: random_actions
+Winrate: 33.33333333333333. Number of moves made by the network: 6/150. Agents: same_commands
+Winrate: 30.0. Number of moves made by the network: 7/150. Agents: base_rushV1
+Winrate: 27.27272727272727. Number of moves made by the network: 12/150. Agents: SwarmAgent
+Winrate: 33.33333333333333. Number of moves made by the network: 11/150. Agents: random_actions
+Winrate: 30.76923076923077. Number of moves made by the network: 12/150. Agents: random_actions
+Winrate: 35.714285714285715. Number of moves made by the network: 11/150. Agents: base_rushV1
