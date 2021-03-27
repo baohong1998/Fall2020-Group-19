@@ -42,30 +42,18 @@ class BranchingQNetwork(nn.Module):
 
     def forward(self, x):
         if(len(x.shape) > 1):
+            #print(x.shape)
             processed_x = self.batch_state_processing(x)
-            print(processed_x.shape)
-            layer1 = []
-            for k in range(len(processed_x)):
-                layer1.append(torch.stack([self.model[i](processed_x[k][i]) for i, _ in enumerate(processed_x[k])]))
-            layer1 = torch.stack(layer1)
+            processed_x = processed_x.transpose(0,1)
+            layer1 = torch.stack([self.model[i](processed_x[i]) for i, _ in enumerate(processed_x)])
             if self.architecture == "Dueling":
-                value = []
-                advs = []
-                for k in range(len(processed_x)):
-                    value.append(torch.stack([self.value_head[i](layer1[k][i]) for i, _ in enumerate(layer1[k])]))
-                    advs.append(torch.stack([self.adv_heads[i](layer1[k][i]) for i, _ in enumerate(layer1[k])]))
-                value = torch.stack(value)
-                advs = torch.stack(advs)
+                value = torch.stack([self.value_head[i](layer1[i]) for i, _ in enumerate(layer1)])
+                advs = torch.stack([self.adv_heads[i](layer1[i]) for i, _ in enumerate(layer1)])
                 mean = advs.mean(2, keepdim=True)
                 q_val = value + advs - mean
                 # print(q_val.device)
             else:
-                q_val = []
-                for k in range(len(processed_x)):
-                    q_val.append(torch.stack([self.out[i](layer1[k][i]) for i, _ in enumerate(layer1[k])]))
-                q_val = torch.stack(q_val)
-                print("Q", q_val.shape)
-                print()
+                q_val = torch.stack([self.out[i](layer1[i]) for i, _ in enumerate(layer1)])
 
         else:
             processed_x = self.state_processing(x)
@@ -163,15 +151,43 @@ class BranchingDQN(nn.Module):
         batch_done = sample[4]
 
         states = torch.tensor(batch_states).float().to(self.device)
+        actions = torch.tensor(batch_action).long().to(self.device)
         rewards = torch.tensor(batch_rewards).float().to(self.device)
         next_states = torch.tensor(batch_next_states).float().to(self.device)
         done = torch.tensor(batch_done).float().to(self.device)
 
-        current_Q = self.policy_network(states)
+        
         next_Q = self.target_network(next_states)
+    
+        actions = actions.transpose(1,2)
+        actions[:,1] = actions[:,1] - 1
+        actions = actions.transpose(1,2)
 
-        current_Q = current_Q.max(1, keepdim=True).values
-        next_Q = next_Q.max(1, keepdim=True).values
+        current_Q = self.policy_network(states)
+        current_Q = current_Q.transpose(0,1)
+       
+        nCurQt = []
+        for idx, group in enumerate(current_Q):
+            new_curQT = []
+            for sub_act in actions[idx]:
+                new_curQT.append(group[sub_act[0]][sub_act[1]])
+            new_curQT = torch.stack(new_curQT)
+            nCurQt.append(new_curQT)
+        nCurQt = torch.stack(nCurQt)
+        #print(nCurQt[0][0])
+        with torch.no_grad():
+            next_Q = self.target_network(next_states)
+            next_Q = next_Q.transpose(0,1)
+            nNextQt = []
+            for i, x in enumerate(next_Q):
+                nNextQt.append(x.max(1).values.sort(descending=True).values[:7])
+            nNextQt = torch.stack(nNextQt)
+        # print(actions)
+        # print("pre Current Q", current_Q[0][0][0])
+        # print("pre next Q", next_Q.shape)
+
+        # current_Q = current_Q.max(1, keepdim=True).values
+        # next_Q = next_Q.max(1, keepdim=True).values
         # if self.td_target == "mean":
         #     current_Q = current_Q.mean()
         # elif self.td_target == "max":
@@ -185,17 +201,19 @@ class BranchingDQN(nn.Module):
         #         max_next_Q, _ = max_next_Q.max(1, keepdim=True)
 
         # print("Current Q", current_Q.shape)
-        # print("reward", rewards.shape)
-        # print("next Q", next_Q.shape)
-        rewards = rewards.reshape(states.shape[0],1,1)
-        done = done.reshape(states.shape[0],1,1)
-        expected_Q = rewards + next_Q * self.gamma * (1 - done)
+        #print("reward", rewards.shape, rewards)
+        #print("next Q", nNextQt.shape, nNextQt[0][0])
+        #print("done", done.shape, done)
+        # rewards = rewards.reshape(states.shape[0],1,1)
+        # done = done.reshape(states.shape[0],1,1)
+        expected_Q = rewards.unsqueeze(1) +  nNextQt*self.gamma 
         # errors = torch.abs(expected_Q - current_Q).cpu().data.numpy()
         #print("Expect:", expected_Q, "Current:", current_Q, "Error:", errors)
-        #print("Expect Q", expected_Q)
+        # print("Expect Q", expected_Q.shape, expected_Q[0][0])
         batch_weights = torch.from_numpy(batch_weights).float()
         batch_weights = batch_weights.to(self.device)
-        loss = batch_weights * F.mse_loss(current_Q, expected_Q)
+        loss = batch_weights * F.mse_loss(nCurQt, expected_Q)
+        #print("curQ",nCurQt[0][0])
         prios = loss + 1e-5
         loss = loss.mean()
         # print(self.policy_network)

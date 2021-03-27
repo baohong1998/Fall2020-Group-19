@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     # Information about environments
 
-    observation_space = 249
+    observation_space = env.observation_space.shape[0]
     action_space = env.num_actions_per_turn
     action_bins = env.num_groups * env.num_nodes
     # Prepare Experience Memory Replay

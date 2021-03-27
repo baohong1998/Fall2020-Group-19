@@ -50,7 +50,6 @@ class Trainer:
         self.unit_file = unit_file
         self.env_output_dir = env_output_dir
         self.pnames = pnames
-        self.player_name="random_actions"
         self.debug = debug
         self.exploration_method = exploration_method
         self.nodes_array = []
@@ -71,8 +70,9 @@ class Trainer:
         rand_player = rand_agent_class(self.env.num_actions_per_turn, 0)
         self.players[pid] = rand_player
         self.pnames[pid] = rand_player.__class__.__name__
-    
+
     def loop(self):
+        #state = self.env.reset()
         player_list = {
             'random_actions': 15, 
             'base_rushV1': 1, 
@@ -90,7 +90,7 @@ class Trainer:
         for p in list(player_list.keys()):
             for i in range(0, player_list[p]):
                 plist.append(p)
-
+        
         state = self.env.reset(
             players=self.players,
             config_dir=self.config_dir,
@@ -115,7 +115,7 @@ class Trainer:
         
         total_turn_played = 0
         turn_played_by_network = 0
-        
+
         for step in range(self.max_steps):
             epsilon = self._exploration(step)
             self.renderer.render(state)
@@ -156,7 +156,6 @@ class Trainer:
             next_state, reward, done, infos = self.env.step(action)
 
             if done:
-                
                 for pid in self.players:
                     if pid != self.player_num:
                         #print(plist)
@@ -164,7 +163,6 @@ class Trainer:
                         counter = player_list[self.player_name]
                         self._changePlayer(self.player_name, pid)
                         print("Training with {}".format(self.player_name))
-                
 
                 next_state = self.env.reset(
                     players=self.players,
@@ -178,7 +176,6 @@ class Trainer:
                 if reward[self.player_num] == 1:
                     num_of_wins += 1
                 total_games_played += 1
-                
                 print("Result on game {}: {}. Number of moves made by the network: {}/{}. Agents: {}".format(
                     len(all_winrate), reward, turn_played_by_network, total_turn_played, self.player_name))
                 episode_winrate = (num_of_wins/total_games_played) * 100
