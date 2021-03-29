@@ -70,11 +70,12 @@ class Trainer:
         rand_player = rand_agent_class(self.env.num_actions_per_turn, 0)
         self.players[pid] = rand_player
         self.pnames[pid] = rand_player.__class__.__name__
+        return rand_player
 
     def loop(self):
         #state = self.env.reset()
         player_list = {
-            'random_actions': 15, 
+            'random_actions': 91, 
             'base_rushV1': 1, 
             'Cycle_BRush_Turn25': 1, 
             'Cycle_BRush_Turn50': 1,
@@ -100,6 +101,8 @@ class Trainer:
             pnames=self.pnames,
             debug=self.debug
         )
+
+        rand_player = self._changePlayer('random_actions',0)
         num_of_wins = 0
         episode_winrate = 0
         total_games_played = 0
@@ -137,11 +140,11 @@ class Trainer:
                         # print(action[pid])
                         turn_played_by_network += 1
                     else:
-                        agent_id = 0
-                        if pid == 0:
-                            agent_id = 1
+                        # agent_id = 0
+                        # if pid == 0:
+                        #     agent_id = 1
                         
-                        action[pid] = self.players[agent_id].get_action(state[pid])
+                        action[pid] = rand_player.get_action(state[pid])
                         # print("not here")
                         # action_idx = np.random.choice(
                         #     len(self.action_table), size=7)
@@ -160,7 +163,6 @@ class Trainer:
                     if pid != self.player_num:
                         #print(plist)
                         self.player_name = random.choice(plist)
-                        counter = player_list[self.player_name]
                         self._changePlayer(self.player_name, pid)
                         print("Training with {}".format(self.player_name))
 

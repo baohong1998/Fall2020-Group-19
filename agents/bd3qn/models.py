@@ -7,7 +7,7 @@ from noisy_net import NoisyLinear, NoisyFactorizedLinear
 from OneHotEncode import OneHotEncode
 
 class BranchingQNetwork(nn.Module):
-    def __init__(self, observation_space, action_space, action_bins, hidden_dim, exploration_method, architecture="DQN"):
+    def __init__(self, observation_space, action_space, action_bins, hidden_dim, exploration_method, architecture="Dueling"):
         super().__init__()
         self.exploration_method = exploration_method
         self.architecture = architecture
@@ -206,21 +206,21 @@ class BranchingDQN(nn.Module):
         #print("done", done.shape, done)
         # rewards = rewards.reshape(states.shape[0],1,1)
         # done = done.reshape(states.shape[0],1,1)
-        expected_Q = rewards.unsqueeze(1) +  nNextQt*self.gamma 
+        expected_Q = rewards.unsqueeze(1) +  nNextQt*self.gamma
         # errors = torch.abs(expected_Q - current_Q).cpu().data.numpy()
         #print("Expect:", expected_Q, "Current:", current_Q, "Error:", errors)
-        # print("Expect Q", expected_Q.shape, expected_Q[0][0])
+        #print("Expect Q", expected_Q)
         batch_weights = torch.from_numpy(batch_weights).float()
         batch_weights = batch_weights.to(self.device)
         loss = batch_weights * F.mse_loss(nCurQt, expected_Q)
-        #print("curQ",nCurQt[0][0])
+        #print("",nCurQt[0][0])
         prios = loss + 1e-5
         loss = loss.mean()
         # print(self.policy_network)
 
         self.optim.zero_grad()
         loss.backward()
-        # print(self.policy_network.parameters())
+        #print(self.policy_network.parameters())
         # for p in self.policy_network.parameters():
         #     p.grad.data.clamp_(-1., 1.)
         self.optim.step()

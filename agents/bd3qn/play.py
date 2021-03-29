@@ -57,10 +57,18 @@ if __name__ == "__main__":
         exploration_method=config.exploration_method
     )
     bdqn_player_num = 1
+    # pre = [p.data for p in bdqn_player.policy_network.parameters()]
+    # for p in bdqn_player.policy_network.parameters():
+    #     pre = p.data[0]
     bdqn_player.policy_network.load_state_dict(torch.load(
         './runs/per-swarm eps/model_state_dict_last'))
-    bdqn_player.eval()
-    bdqn_player.to(device)
+    # post = [p.data for p in bdqn_player.policy_network.parameters()]
+    # for p in bdqn_player.policy_network.parameters():
+    #     post = p.data[0]
+    
+    bdqn_player.policy_network.eval()
+    bdqn_player.policy_network.to(device)
+    print(bdqn_player.policy_network)
     players[0] = rand_player
     players[1] = bdqn_player
     names[0] = rand_player.__class__.__name__
