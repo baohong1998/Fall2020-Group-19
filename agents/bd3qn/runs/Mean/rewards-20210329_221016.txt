@@ -1,0 +1,4 @@
+Winrate: 100.0. Number of moves made by the network: 2/150. Agents: random_actions
+Winrate: 100.0. Number of moves made by the network: 6/150. Agents: random_actions
+Winrate: 100.0. Number of moves made by the network: 8/150. Agents: random_actions
+Winrate: 100.0. Number of moves made by the network: 8/150. Agents: random_actions

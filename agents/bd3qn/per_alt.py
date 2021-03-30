@@ -154,8 +154,6 @@ class PrioritizedReplayBuffer(object):
         """
         assert len(idxes) == len(priorities)
         for idx, priority in zip(idxes, priorities):
-            if(priority <= 0):
-                priority += 1e-8
             assert priority > 0
             assert 0 <= idx < len(self._storage)
             self._it_sum[idx] = priority ** self._alpha

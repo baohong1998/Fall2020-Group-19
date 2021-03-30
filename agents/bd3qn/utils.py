@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 
 
-def build_action_table(num_groups, num_nodes):
+def build_action_table(num_groups=12, num_nodes=11):
     action_choices = np.zeros((num_groups * num_nodes, 2))
     group_id = 0
     node_id = 1

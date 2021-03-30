@@ -6,6 +6,7 @@ from utils import save_checkpoint, save_best, build_action_table
 from datetime import datetime
 import os
 import importlib
+from player import PlayerHelper
 
 class Trainer:
     def __init__(self, model,
@@ -43,6 +44,7 @@ class Trainer:
         self.save_update_freq = save_update_freq
         self.output_dir = output_dir
         self.action_table = build_action_table(env.num_groups, env.num_nodes)
+        self.player_helper = PlayerHelper(7,1, "../config/DemoMap.json")
         self.players = players
         self.player_num = player_num
         self.config_dir = config_dir
@@ -72,9 +74,19 @@ class Trainer:
         self.players[pid] = rand_player
         self.pnames[pid] = rand_player.__class__.__name__
     
+    def _get_random(self, obs):
+        rand_agent_file = "./random_actions"
+        rand_agent_name, rand_agent_extension = os.path.splitext(rand_agent_file)
+        rand_agent_mod = importlib.import_module(
+            rand_agent_name.replace('./', 'agents.'))
+        rand_agent_class = getattr(
+            rand_agent_mod, os.path.basename(rand_agent_name))
+        rand_player = rand_agent_class(self.env.num_actions_per_turn, 0)
+        return rand_player.get_action(obs)
+    
     def loop(self):
         player_list = {
-            'random_actions': 15, 
+            'random_actions': 91, 
             'base_rushV1': 1, 
             'Cycle_BRush_Turn25': 1, 
             'Cycle_BRush_Turn50': 1,
@@ -128,26 +140,59 @@ class Trainer:
                 if pid == self.player_num:
                     # print(self.exploration_method)
                     if self.exploration_method == "Noisy" or np.random.random_sample() > epsilon:
-                        action_idx = self.model.get_action(OneHotEncode(state[pid]))
-                        action[pid] = np.zeros(
-                            (self.env.num_actions_per_turn, 2))
-                        for n in range(0, len(action_idx)):
-                            action[pid][n][0] = self.action_table[action_idx[n]][0]
-                            action[pid][n][1] = self.action_table[action_idx[n]][1]
-                        # print(action[pid])
+                        # action_idx = self.model.get_action(OneHotEncode(state[pid]))
+                        # action[pid] = np.zeros(
+                        #     (self.env.num_actions_per_turn, 2))
+                        # for n in range(0, len(action_idx)):
+                        #     action[pid][n][0] = self.action_table[action_idx[n]][0]
+                        #     action[pid][n][1] = self.action_table[action_idx[n]][1]
+                        # # print(action[pid])
+                        action[pid] = self.model.get_action(state[pid])
                         turn_played_by_network += 1
+                        # if len(action[self.player_num]) < 7:
+                        #     print("chose action from agent", action[self.player_num])
                     else:
                         #print("not here")
-                        action_idx = np.random.choice(
-                            len(self.action_table), size=7)
-                        action[pid] = np.zeros(
-                            (self.env.num_actions_per_turn, 2))
-                        for n in range(0, len(action_idx)):
-                            action[pid][n][0] = self.action_table[action_idx[n]][0]
-                            action[pid][n][1] = self.action_table[action_idx[n]][1]
+                        # action_idx = np.random.choice(
+                        #     len(self.action_table), size=7)
+                        # action[pid] = np.zeros(
+                        #     (self.env.num_actions_per_turn, 2))
+                        # for n in range(0, len(action_idx)):
+                        #     action[pid][n][0] = self.action_table[action_idx[n]][0]
+                        #     action[pid][n][1] = self.action_table[action_idx[n]][1]
+                        # legal = self.player_helper.legal_moves(state[pid])
+                        # print(legal)
+                        # legal = [i for i, x in enumerate(legal) if x]
+                        # print(legal)
+                        # legal = random.sample(legal, 7)
+                        # action[pid] = np.take(self.action_table, legal, 0)
+                        legal_moves = self.player_helper.legal_moves(state[pid])
+                        legal_moves = [i for i, x in enumerate(legal_moves) if x]
+                        if len(legal_moves) > 7:
+                            legal_moves = random.sample(legal_moves, 7)
+                        #print("legal", legal_moves)
+                        actions_final = np.take(self.action_table, legal_moves, 0)
+                        #print("action final", actions_final)
+                        action[pid] = actions_final
+                        # actions = self._get_random(state[pid])
+                        
+                        # actions_final = []
+                        # for sub_a in actions:
+                        #     sub_a = sub_a.tolist()
+                        #     sub_a_idx = self.action_table.tolist().index(sub_a)
+                        #     if legal_moves.count(sub_a_idx) > 0:
+                        #         actions_final.append(sub_a)
+                        # if len(actions_final) == 0:
+                        #     actions_final = np.array(actions_final).reshape(0,2)
+                        # else:
+                        #     actions_final = np.array(actions_final)
+                        # #print("action final", np.array(actions_final))
+                        # action[pid] = actions_final
+                        # if len(action[self.player_num]) < 7:
+                        #     print("chose action from random", action[self.player_num])
                 else:
                     action[pid] = self.players[pid].get_action(state[pid])
-
+            #print(action)
             next_state, reward, done, infos = self.env.step(action)
 
             if done:
@@ -156,7 +201,6 @@ class Trainer:
                     if pid != self.player_num:
                         #print(plist)
                         self.player_name = random.choice(plist)
-                        counter = player_list[self.player_name]
                         self._changePlayer(self.player_name, pid)
                         print("Training with {}".format(self.player_name))
                 
@@ -189,12 +233,12 @@ class Trainer:
                     highest_winrate = episode_winrate
                     save_best(self.model, all_winrate,
                               "Evergaldes", self.output_dir)
-
+            
             self.memory.add(
-                OneHotEncode(state[self.player_num]),
-                action_idx,
+                state[self.player_num],
+                action[self.player_num],
                 reward[self.player_num],
-                OneHotEncode(next_state[self.player_num]),
+                next_state[self.player_num],
                 done
             )
             state = next_state

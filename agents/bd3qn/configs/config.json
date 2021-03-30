@@ -10,18 +10,18 @@
   "exploration": {
     "epsilon_start": 1,
     "epsilon_final": 0.01,
-    "epsilon_decay": 20000
+    "epsilon_decay": 8000
   },
   "training": {
     "target_update_freq": 3000,
-    "start_learning": 2000,
+    "start_learning": 512,
     "learning_rate": 0.0001,
     "max_steps": 10000000,
-    "max_episodes": 25000
+    "max_episodes": 800
   },
   "memory_replay": {
-    "capacity": 64,
-    "batch_size": 5
+    "capacity": 2048,
+    "batch_size": 32
   },
   "model": {
     "temporal_difference_target": "mean",
