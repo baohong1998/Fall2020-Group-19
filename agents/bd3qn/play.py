@@ -6,7 +6,7 @@ import utils
 import gym
 from OneHotEncode import OneHotEncode
 from config import Configuration
-from models import BranchingQNetwork
+from models import BranchingQNetwork, BranchingDQN
 from everglades_renderer import Renderer
 import numpy as np
 import sys
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         config.device if torch.cuda.is_available() else "cpu")
 
     # Information about environments
-    observation_space = 249
+    observation_space = 105
     action_space = env.num_actions_per_turn
     action_bins = env.num_groups * env.num_nodes
 
@@ -44,18 +44,22 @@ if __name__ == "__main__":
         rand_agent_mod, os.path.basename(rand_agent_name))
     rand_player = rand_agent_class(env.num_actions_per_turn, 0)
 
-    bdqn_player = BranchingQNetwork(
+    bdqn_player = BranchingDQN(
         observation_space=observation_space,
         action_space=action_space,
         action_bins=action_bins,
+        target_update_freq=config.target_update_freq,
+        learning_rate=config.lr,
+        gamma=config.gamma,
         hidden_dim=config.hidden_dim,
+        td_target=config.td_target,
+        device=device,
         exploration_method=config.exploration_method
     )
     bdqn_player_num = 1
-    bdqn_player.load_state_dict(torch.load(
+    bdqn_player.policy_network.load_state_dict(torch.load(
         './runs/Mean/model_state_dict_last'))
     bdqn_player.eval()
-    bdqn_player.to(device)
     players[0] = rand_player
     players[1] = bdqn_player
     names[0] = rand_player.__class__.__name__
@@ -81,22 +85,23 @@ if __name__ == "__main__":
             renderer.render(state)
             for pid in players:
                 if pid != rand_player.player_num:
-                    encode_state = OneHotEncode(state[pid])
-                    encode_state = torch.from_numpy(
-                        encode_state).float().to(device)
-                    with torch.no_grad():
-                        action_idx = bdqn_player(encode_state).squeeze(0)
-                        # .numpy().reshape(-1)
-                        action_idx = torch.argmax(
-                            action_idx, dim=1).reshape(-1)
-                    action_idx = action_idx.detach().cpu().numpy()  # .reshape(-1)
-                    action[pid] = np.zeros(
-                        (env.num_actions_per_turn, 2))
+                    action[pid] = bdqn_player.get_action(state[pid])
+                    # encode_state = state[pid]
+                    # encode_state = torch.from_numpy(
+                    #     encode_state).float().to(device)
+                    # with torch.no_grad():
+                    #     action_idx = bdqn_player(encode_state).squeeze(0)
+                    #     # .numpy().reshape(-1)
+                    #     action_idx = torch.argmax(
+                    #         action_idx, dim=1).reshape(-1)
+                    # action_idx = action_idx.detach().cpu().numpy()  # .reshape(-1)
+                    # action[pid] = np.zeros(
+                    #     (env.num_actions_per_turn, 2))
                     
-                    for n in range(0, len(action_idx)):
-                        action[pid][n][0] = action_table[action_idx[n]][0]
-                        action[pid][n][1] = action_table[action_idx[n]][1]
-                    print(action[pid])
+                    # for n in range(0, len(action_idx)):
+                    #     action[pid][n][0] = action_table[action_idx[n]][0]
+                    #     action[pid][n][1] = action_table[action_idx[n]][1]
+                    # print(action[pid])
                 else:
                     action[pid] = rand_player.get_action(state[pid])
             #print(action)

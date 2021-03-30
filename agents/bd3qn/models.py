@@ -98,7 +98,9 @@ class BranchingDQN(nn.Module):
         #turn = x[0]
         legal_obs = self.player_helper.legal_moves(x)
         legal_idx = [i for i, x in enumerate(legal_obs) if x]
+        illegal_idx = [i for i, x in enumerate(legal_obs) if not x]
         legal_idx = torch.LongTensor(legal_idx).to(self.device)
+        illegal_idx = torch.LongTensor(illegal_idx).to(self.device)
         #print("legal idx" , legal_idx)
         x = torch.from_numpy(x).float().to(self.device)
         with torch.no_grad():
@@ -107,10 +109,18 @@ class BranchingDQN(nn.Module):
             preds = self.policy_network(x)
             #print("pred", preds)
             legal_preds = preds.gather(0, legal_idx)
+            illegal_preds = preds.gather(0, illegal_idx)
             #print(legal_preds)
             legal_preds = legal_preds.sort(descending=True)
+            illegal_preds = illegal_preds.sort(descending=True)
             legal_preds_idx = legal_preds.indices[:7]
-            action_idx = legal_idx.gather(0, legal_preds_idx)
+            illegal_preds_idx = illegal_preds.indices[:(7 - len(legal_preds_idx))]
+            # if len(legal_preds_idx) < 7:
+            #     remain = 7 - len(legal_preds_idx)
+            #     ilegal_preds_idx = illegal_preds.indices[:remain]
+            legal_action_idx = legal_idx.gather(0, legal_preds_idx)
+            illegal_action_idx = illegal_idx.gather(0, illegal_preds_idx)
+            action_idx = torch.cat((legal_action_idx, illegal_action_idx))
             action_idx = action_idx.detach().cpu().numpy()
             actions = np.take(self.action_choices, action_idx, 0)
         #print("action", actions)
@@ -135,10 +145,10 @@ class BranchingDQN(nn.Module):
             for a in batch:
                 a = a.tolist()
                 act.append(temp.index(a))
-            if len(act) < 7:
-                remain = 7 - len(act)
-                for i in range(remain):
-                    act.append(-1)
+            # if len(act) < 7:
+            #     remain = 7 - len(act)
+            #     for i in range(remain):
+            #         act.append(-1)
             actions.append(act)
         #print("actions", actions)
         #actions = torch.stack(actions)
@@ -148,8 +158,8 @@ class BranchingDQN(nn.Module):
         batch_action_choices = []
         for nState in batch_next_states:
             legal_nState = self.player_helper.legal_moves(nState)
-            legal_idx = [i for i, x in enumerate(legal_nState) if x]
-            batch_action_choices.append(torch.LongTensor(legal_idx).to(self.device))
+            legal_idx = [torch.LongTensor([i for i, x in enumerate(legal_nState) if x]).to(self.device), torch.LongTensor([i for i, x in enumerate(legal_nState) if not x]).to(self.device)]
+            batch_action_choices.append(legal_idx)
         #print("batch action choices", batch_action_choices)
         next_states = torch.tensor(batch_next_states).float().to(self.device)
 
@@ -172,15 +182,20 @@ class BranchingDQN(nn.Module):
 
             next_Q_final = []
             for i, n in enumerate(next_Q):
-                legal_next = n.gather(0, batch_action_choices[idx])
+                legal_next = n.gather(0, batch_action_choices[idx][0])
+                illegal_next = n.gather(0, batch_action_choices[idx][1])
                 legal_next = legal_next.sort(descending=True)
                 legal_next = legal_next.values[:7]
-                if len(legal_next) < 7:
-                    remain = 7 - len(legal_next)
-                    for k in range(remain):
-                        legal_next = torch.cat((legal_next, torch.tensor([0]).to(self.device)))
+                illegal_next = illegal_next.sort(descending=True)
+                illegal_next = illegal_next.values[:(7-len(legal_next))]
+                # if len(legal_next) < 7:
+                #     remain = 7 - len(legal_next)
+                #     illegal
+                #     for k in range(remain):
+                #         legal_next = torch.cat((legal_next, torch.tensor([0]).to(self.device)))
                     #print("legal next", legal_next)
-                next_Q_final.append(legal_next)
+                next_action_q = torch.cat((legal_next, illegal_next))
+                next_Q_final.append(next_action_q)
             next_Q_final = torch.stack(next_Q_final)
             #print("next q", next_Q_final)
             

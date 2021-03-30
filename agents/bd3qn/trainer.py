@@ -166,15 +166,15 @@ class Trainer:
                         # print(legal)
                         # legal = random.sample(legal, 7)
                         # action[pid] = np.take(self.action_table, legal, 0)
-                        legal_moves = self.player_helper.legal_moves(state[pid])
-                        legal_moves = [i for i, x in enumerate(legal_moves) if x]
-                        if len(legal_moves) > 7:
-                            legal_moves = random.sample(legal_moves, 7)
-                        #print("legal", legal_moves)
-                        actions_final = np.take(self.action_table, legal_moves, 0)
-                        #print("action final", actions_final)
-                        action[pid] = actions_final
-                        # actions = self._get_random(state[pid])
+                        # legal_moves = self.player_helper.legal_moves(state[pid])
+                        # legal_moves = [i for i, x in enumerate(legal_moves) if x]
+                        # if len(legal_moves) > 7:
+                        #     legal_moves = random.sample(legal_moves, 7)
+                        # #print("legal", legal_moves)
+                        # actions_final = np.take(self.action_table, legal_moves, 0)
+                        # #print("action final", actions_final)
+                        # action[pid] = actions_final
+                        action[pid] = self._get_random(state[pid])
                         
                         # actions_final = []
                         # for sub_a in actions:
