@@ -86,16 +86,16 @@ class Trainer:
     
     def loop(self):
         player_list = {
-            'random_actions': 91, 
-            'base_rushV1': 1, 
-            'Cycle_BRush_Turn25': 1, 
-            'Cycle_BRush_Turn50': 1,
-            'Cycle_Target_Node': 1,
-            'cycle_targetedNode1': 1,
-            'cycle_targetedNode11': 1,
-            'cycle_targetedNode11P2': 1,
-            'same_commands': 1,
-            'SwarmAgent': 1
+            'random_actions': 1, 
+            'base_rushV1': 0, 
+            'Cycle_BRush_Turn25': 0, 
+            'Cycle_BRush_Turn50': 0,
+            'Cycle_Target_Node': 0,
+            'cycle_targetedNode1': 0,
+            'cycle_targetedNode11': 0,
+            'cycle_targetedNode11P2': 0,
+            'same_commands': 0,
+            'SwarmAgent': 0
             }
         plist = []
 
@@ -193,8 +193,11 @@ class Trainer:
                 else:
                     action[pid] = self.players[pid].get_action(state[pid])
             #print(action)
-            next_state, reward, done, infos = self.env.step(action)
-
+            next_state, reward, done, scores, infos = self.env.step(action)
+            
+            other_player_id = 0
+            if self.player_num == 0:
+                other_player_id = 1
             if done:
                 
                 for pid in self.players:
@@ -214,12 +217,16 @@ class Trainer:
                     pnames=self.pnames,
                     debug=self.debug
                 )
-                if reward[self.player_num] == 1:
-                    num_of_wins += 1
-                total_games_played += 1
-                
                 print("Result on game {}: {}. Number of moves made by the network: {}/{}. Agents: {}".format(
                     len(all_winrate), reward, turn_played_by_network, total_turn_played, self.player_name))
+                if reward[self.player_num] == 1:
+                    reward[self.player_num] = scores[self.player_num] + 1500
+                    num_of_wins += 1
+                else:
+                    reward[self.player_num] = scores[self.player_num] - scores[other_player_id] - 1500
+                total_games_played += 1
+                
+                
                 episode_winrate = (num_of_wins/total_games_played) * 100
                 all_winrate.append(episode_winrate)
                 with open(os.path.join(path, "rewards-{}.txt".format(time)), 'a') as fout:
@@ -233,7 +240,9 @@ class Trainer:
                     highest_winrate = episode_winrate
                     save_best(self.model, all_winrate,
                               "Evergaldes", self.output_dir)
-            
+            else:
+                reward[self.player_num] = scores[self.player_num] - scores[other_player_id]
+
             self.memory.add(
                 state[self.player_num],
                 action[self.player_num],

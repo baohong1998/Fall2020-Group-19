@@ -13,7 +13,7 @@
     "epsilon_decay": 8000
   },
   "training": {
-    "target_update_freq": 3000,
+    "target_update_freq": 750,
     "start_learning": 512,
     "learning_rate": 0.0001,
     "max_steps": 10000000,

@@ -1,0 +1,5 @@
+Winrate: 0.0. Number of moves made by the network: 1/150. Agents: random_actions
+Winrate: 0.0. Number of moves made by the network: 6/150. Agents: random_actions
+Winrate: 0.0. Number of moves made by the network: 8/150. Agents: cycle_targetedNode11P2
+Winrate: 0.0. Number of moves made by the network: 1/53. Agents: random_actions
+Winrate: 0.0. Number of moves made by the network: 12/150. Agents: random_actions

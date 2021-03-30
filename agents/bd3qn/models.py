@@ -7,7 +7,7 @@ from noisy_net import NoisyLinear, NoisyFactorizedLinear
 from player import PlayerHelper
 from utils import build_action_table
 class BranchingQNetwork(nn.Module):
-    def __init__(self, observation_space, action_space, action_bins, hidden_dim, exploration_method, architecture = "DQN"):
+    def __init__(self, observation_space, action_space, action_bins, hidden_dim, exploration_method, architecture = "Dueling"):
         super().__init__()
         self.exploration_method = exploration_method
         # if self.exploration_method == "Noisy":
@@ -40,12 +40,14 @@ class BranchingQNetwork(nn.Module):
 
     def forward(self, x):
         first_layer = self.model(x)
-        out = self.out(first_layer)
-        q_val = out
+        
         if self.architecture == "Dueling":
-            value = self.value_head(out)
-            advs = self.advs_heads(out)
+            value = self.value_head(first_layer)
+            advs = self.adv_heads(first_layer)
             q_val = value + advs - advs.mean()
+        else:
+            out = self.out(first_layer)
+            q_val = out
         # if value.shape[0] == 1:
         #     advs = torch.stack([l(out) for l in self.adv_heads], dim=0)
         #     q_val = value + advs - advs.mean(1, keepdim=True)
@@ -215,7 +217,7 @@ class BranchingDQN(nn.Module):
 
         #print("Current Q", current_Q)
         expected_Q = rewards + next_Q_final * self.gamma
-        #print("Expect:", expected_Q, "Current:", current_Q, "Error:", errors)
+        #print("Expect:", expected_Q, "Current:", current_Q)
         #print("Expect Q", expected_Q)
         #print("weights", batch_weights)
         batch_weights = torch.tensor(batch_weights).float().to(self.device)
