@@ -98,7 +98,7 @@ if __name__ == "__main__":
                 else:
                     action[pid] = rand_player.get_action(state[pid])
             #print(action)
-            state, reward, done, info = env.step(action)
+            state, reward, done, scores, info = env.step(action)
 
             if done:
                 if reward[bdqn_player_num] == 1:
