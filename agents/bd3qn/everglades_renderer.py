@@ -1,39 +1,39 @@
 from gym.envs.classic_control import rendering
 import json
 
-
-"""
-Allows for rendering of Everglades for both frame collection and viewing.
-Use is similar to a gym environment's render() function, where
-render(observation) is used to render the next state of the env.
-However, this is a class to allow for the map to be initialized before
-rendering begins.
-
-RENDERING INFO
---------------
-    BLUE - Player 1 Controlled
-    RED - Player 2 Controlled
-    NODE TYPES:
-        Dark Gray Nodes - Fortresses
-        Gray Nodes - Watchtowers
-        Light Gray Nodes - Other
-    GROUP TYPES:
-        Circle - Controllers
-        Triangle - Strikers
-        Square - Tanks
-    
-    Transparent groups are in transit.
-    Darkened groups are dead.
-
-INIT ARGS
----------
-    map_file - The filepath for the map json to be loaded
-    frame_collection - Whether to return RGB arrays each time render() is called
-    hidden - Whether or not to show the rendering
-"""
-# TODO: Implement directly into the Everglades environment, and reimplement
-#       without OpenAI's pyglet front-end classes (gym.envs.classic_control)
+# TODO: Implement directly into the Everglades environment,
+#       reimplement without OpenAI's pyglet front-end classes (gym.envs.classic_control),
+#       and generalize to different maps.
 class Renderer(object):
+    """
+    Allows for rendering of Everglades for both frame collection and viewing.
+    Use is similar to a gym environment's render() function, where
+    render(observation) is used to render the next state of the env.
+    However, this is a class to allow for the map to be initialized before
+    rendering begins.
+
+    RENDERING INFO
+    --------------
+        BLUE - Player 1 Controlled
+        RED - Player 2 Controlled
+        NODE TYPES:
+            Dark Gray Nodes - Fortresses
+            Gray Nodes - Watchtowers
+            Light Gray Nodes - Other
+        GROUP TYPES:
+            Circle - Controllers
+            Triangle - Strikers
+            Square - Tanks
+        
+        Transparent groups are in transit.
+        Darkened groups are dead.
+
+    PARAMETERS
+    ----------
+        map_file - The filepath for the map json to be loaded
+        frame_collection - Whether to return RGB arrays each time render() is called
+        hidden - Whether or not to show the rendering
+    """
     def __init__(self, map_file, frame_collection = False, hidden = False):
         # The map
         self.load_map(map_file)
@@ -55,25 +55,25 @@ class Renderer(object):
         # Whether or not to display window
         self.hidden = hidden
 
-    # Loads the map_file.json and gets basic info about it
     def load_map(self,map_file):
+        """Loads the map_file.json and gets basic info about it"""
         with open(map_file) as fid:
             self.map_dat = json.load(fid)
         self.num_nodes = len(self.map_dat['nodes'])
         return
 
-    """
-    Returns the second player's equivalent node id from the first player's perspective.
-    This is necessary as the current environment's perspective is equivalent to
-    the first player's.
-    """
     # TODO: Generalize to different maps
     def player2_mirror(self, node_pos):
+        """
+        Returns the second player's equivalent node id from the first player's perspective.
+        This is necessary as the current environment's perspective is equivalent to
+        the first player's.
+        """
         mirror = [11, 8, 9, 10, 5, 6, 7, 2, 3, 4, 1] # DemoMap layout
         return mirror[node_pos-1]
 
-    # Creates the window for display and initializes the render of Everglades
     def _initialize(self,state):
+        """Creates the window for display and initializes the render of Everglades."""
         # Creates the pyglet window
         self.viewer = rendering.Viewer(self.screen_width, self.screen_height)
         # Hides window if necessary
@@ -134,11 +134,11 @@ class Renderer(object):
         self.player1_trans = []
         for g in range(self.num_groups):
             # Controller (circle)
-            if state[0][g*4 + 46] == 0:
+            if state[0][g*5 + 46] == 0:
                 group = rendering.make_circle(
                     radius=self.group_scaling, filled=True)
             # Striker (triangle)
-            elif state[0][g*4 + 46] == 1:
+            elif state[0][g*5 + 46] == 1:
                 group = rendering.FilledPolygon([(0, self.group_scaling),
                     (-self.group_scaling, -self.group_scaling),
                     (self.group_scaling, -self.group_scaling)])
@@ -168,11 +168,11 @@ class Renderer(object):
         self.player2_trans = []
         for g in range(self.num_groups):
             # Controller (circle)
-            if state[1][g*4 + 46] == 0:
+            if state[1][g*5 + 46] == 0:
                 group = rendering.make_circle(
                     radius=self.group_scaling, filled=True)
             # Striker (triangle)
-            elif state[1][g*4 + 46] == 1:
+            elif state[1][g*5 + 46] == 1:
                 group = rendering.FilledPolygon([(0, self.group_scaling),
                     (-self.group_scaling, -self.group_scaling),
                     (self.group_scaling, -self.group_scaling)])
@@ -199,8 +199,8 @@ class Renderer(object):
             self.player2_trans.append(group_trans)
 
 
-    # Renders the state given for the Everglades map
     def render(self, state):
+        """Renders the state given for the Everglades map"""
         # Initialializes Screen and Nodes
         if self.viewer is None:
             self._initialize(state)

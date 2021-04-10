@@ -8,7 +8,7 @@
     "env_output_dir": "../../game_telemetry"
   },
   "exploration": {
-    "epsilon_start": 1,
+    "epsilon_start": 0.8,
     "epsilon_final": 0.01,
     "epsilon_decay": 16000
   },
@@ -31,7 +31,7 @@
   },
   "output": {
     "save_update_freq": 20,
-    "directory": "legal moves dqn random 0.95 gamma",
+    "directory": "new training",
     "dpi": 72
   },
   "device": "cuda:0"

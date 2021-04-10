@@ -58,7 +58,7 @@ if __name__ == "__main__":
     )
     bdqn_player_num = 1
     bdqn_player.policy_network.load_state_dict(torch.load(
-        './runs/Mean/model_state_dict_last'))
+        './runs/Legal-move/model_state_dict_dueling_last_5133'))
     bdqn_player.eval()
     players[0] = rand_player
     players[1] = bdqn_player
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 else:
                     action[pid] = rand_player.get_action(state[pid])
             #print(action)
-            state, reward, done, scores, info = env.step(action)
+            state, reward, done, scores = env.step(action)
             # print(scores)
             if done:
                 if reward[bdqn_player_num] == 1:

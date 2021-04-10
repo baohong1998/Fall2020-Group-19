@@ -86,8 +86,8 @@ class Trainer:
     
     def loop(self):
         player_list = {
-            'random_actions': 1, 
-            'base_rushV1': 0, 
+            'random_actions': 0, 
+            'base_rushV1': 1,
             'Cycle_BRush_Turn25': 0, 
             'Cycle_BRush_Turn50': 0,
             'Cycle_Target_Node': 0,
@@ -167,11 +167,22 @@ class Trainer:
                         # legal = random.sample(legal, 7)
                         # action[pid] = np.take(self.action_table, legal, 0)
                         legal_moves = self.player_helper.legal_moves(state[pid])
-                        legal_moves = [i for i, x in enumerate(legal_moves) if x]
-                        if len(legal_moves) > 7:
-                            legal_moves = random.sample(legal_moves, 7)
-                        #print("legal", legal_moves)
-                        actions_final = np.take(self.action_table, legal_moves, 0)
+                        actions_final = self._get_random(state[pid])
+
+                        for i in range(len(actions_final)):
+                            compute_idx = actions_final[i][0]*11 + (actions_final[i][1] - 1)
+                            compute_idx = compute_idx.astype(int)
+                            if legal_moves[compute_idx] == False:
+                                actions_final[i] = [0,0]
+                        
+                        # if len(legal_moves) > 7:
+                        #     legal_moves = random.sample(legal_moves, 7)
+
+                        # #print("legal", legal_moves)
+                        # actions_final = np.take(self.action_table, legal_moves, 0)
+                        # if len(actions_final) < 7:
+                        #     remain = 7 - len(actions_final)
+                        #     np.append(actions_final, [0,0])
                         #print("action final", actions_final)
                         action[pid] = actions_final
                         # actions = self._get_random(state[pid])
@@ -193,7 +204,7 @@ class Trainer:
                 else:
                     action[pid] = self.players[pid].get_action(state[pid])
             #print(action)
-            next_state, reward, done, scores, infos = self.env.step(action)
+            next_state, reward, done, scores = self.env.step(action)
             
             other_player_id = 0
             if self.player_num == 0:
@@ -220,10 +231,10 @@ class Trainer:
                 print("Result on game {}: {}. Number of moves made by the network: {}/{}. Agents: {}".format(
                     len(all_winrate), reward, turn_played_by_network, total_turn_played, self.player_name))
                 if reward[self.player_num] == 1:
-                    reward[self.player_num] = scores[self.player_num] + 1500
+                    reward[self.player_num] = scores[self.player_num] + 3001
                     num_of_wins += 1
                 else:
-                    reward[self.player_num] = scores[self.player_num] - scores[other_player_id] - 1500
+                    reward[self.player_num] = scores[self.player_num] - scores[other_player_id] - 3001
                 total_games_played += 1
                 
                 

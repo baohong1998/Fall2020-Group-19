@@ -1,0 +1,11 @@
+Winrate: 100.0. Number of moves made by the network: 31/150. Agents: base_rushV1
+Winrate: 50.0. Number of moves made by the network: 16/90. Agents: base_rushV1
+Winrate: 33.33333333333333. Number of moves made by the network: 15/81. Agents: base_rushV1
+Winrate: 25.0. Number of moves made by the network: 14/85. Agents: base_rushV1
+Winrate: 20.0. Number of moves made by the network: 23/76. Agents: base_rushV1
+Winrate: 16.666666666666664. Number of moves made by the network: 14/87. Agents: base_rushV1
+Winrate: 14.285714285714285. Number of moves made by the network: 16/77. Agents: base_rushV1
+Winrate: 12.5. Number of moves made by the network: 19/78. Agents: base_rushV1
+Winrate: 11.11111111111111. Number of moves made by the network: 21/83. Agents: base_rushV1
+Winrate: 10.0. Number of moves made by the network: 17/78. Agents: base_rushV1
+Winrate: 9.090909090909092. Number of moves made by the network: 22/81. Agents: base_rushV1
