@@ -8,7 +8,7 @@
     "env_output_dir": "../../game_telemetry"
   },
   "exploration": {
-    "epsilon_start": 0.8,
+    "epsilon_start": 1,
     "epsilon_final": 0.01,
     "epsilon_decay": 16000
   },
@@ -25,13 +25,13 @@
   },
   "model": {
     "temporal_difference_target": "mean",
-    "exploration": "Epsilon",
+    "exploration": "Eps",
     "gamma": 0.95,
     "hidden_dim": 128
   },
   "output": {
     "save_update_freq": 20,
-    "directory": "new training",
+    "directory": "noisy",
     "dpi": 72
   },
   "device": "cuda:0"

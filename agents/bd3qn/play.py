@@ -58,7 +58,7 @@ if __name__ == "__main__":
     )
     bdqn_player_num = 1
     bdqn_player.policy_network.load_state_dict(torch.load(
-        './runs/Legal-move/model_state_dict_dueling_last_5133'))
+        './runs/Legal-move/model_state_dict_best_no_shaping_1300'))
     bdqn_player.eval()
     players[0] = rand_player
     players[1] = bdqn_player

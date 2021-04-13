@@ -47,7 +47,7 @@ class EvergladesEnv(gym.Env):
         # print(status)
 
         # return state, reward, done, info
-        return observations, reward, done, scores, {}
+        return observations, reward, done, scores
 
     def reset(self, **kwargs):
         # kwargs is allowed. https://github.com/openai/gym/blob/master/gym/core.py

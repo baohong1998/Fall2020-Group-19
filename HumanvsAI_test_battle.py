@@ -49,11 +49,11 @@ else:
 # if map_name == 'RandomMap.json':
  #   generate_map.exec(3)
 
-config_dir = '/everglades/config/'
+config_dir = '/config/'
 map_file = config_dir + map_name
 setup_file = config_dir + 'GameSetup.json'
 unit_file = config_dir + 'UnitDefinitions.json'
-output_dir = '/everglades/game_telemetry/'
+output_dir = '/game_telemetry/'
 
 debug = False
 
@@ -109,6 +109,6 @@ while not done:
     observations, reward, done, info = env.step(actions)
 
     # output telemetry every turn
-    server.EvergladesGame.write_output(env.game, sock)
+    # server.EvergladesGame.write_output(env.game, sock)
 
 print(reward)

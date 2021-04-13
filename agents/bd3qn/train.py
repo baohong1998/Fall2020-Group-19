@@ -74,10 +74,10 @@ if __name__ == '__main__':
         device=device,
         exploration_method=config.exploration_method
     )
-    bdqn_player.policy_network.load_state_dict(torch.load(
-        './runs/Legal-move/model_state_dict_dueling_last_5133'))
-    bdqn_player.target_network.load_state_dict(torch.load(
-        './runs/Legal-move/model_state_dict_dueling_last_5133'))
+    # bdqn_player.policy_network.load_state_dict(torch.load(
+    #     './runs/Legal-move/model_state_dict_dueling_last_5133'))
+    # bdqn_player.target_network.load_state_dict(torch.load(
+    #     './runs/Legal-move/model_state_dict_dueling_last_5133'))
 
     players[0] = rand_player
     names[0] = rand_player.__class__.__name__

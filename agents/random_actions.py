@@ -9,7 +9,7 @@ class random_actions:
         self.action_space = action_space
         self.num_groups = 12
         self.player_num = player_num
-        with open(map_name) as fid:
+        with open('config/'+map_name) as fid:
             self.map_dat = json.load(fid)
 
         self.nodes_array = []

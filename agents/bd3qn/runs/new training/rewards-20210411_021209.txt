@@ -1,0 +1,9 @@
+Winrate last 100: 100.0. Number of moves made by the network: 1/150. Agents: random_actions
+Winrate last 100: 50.0. Number of moves made by the network: 2/150. Agents: random_actions
+Winrate last 100: 33.33333333333333. Number of moves made by the network: 4/150. Agents: random_actions
+Winrate last 100: 25.0. Number of moves made by the network: 2/150. Agents: random_actions
+Winrate last 100: 40.0. Number of moves made by the network: 8/150. Agents: random_actions
+Winrate last 100: 33.33333333333333. Number of moves made by the network: 6/150. Agents: random_actions
+Winrate last 100: 28.57142857142857. Number of moves made by the network: 10/150. Agents: random_actions
+Winrate last 100: 25.0. Number of moves made by the network: 18/150. Agents: random_actions
+Winrate last 100: 22.22222222222222. Number of moves made by the network: 14/150. Agents: random_actions

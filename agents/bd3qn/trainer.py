@@ -30,7 +30,8 @@ class Trainer:
                  env_output_dir,
                  pnames,
                  debug,
-                 renderer):
+                 renderer,
+                 isNSteps=True):
         self.model = model
         self.env = env
         self.memory = memory
@@ -57,6 +58,7 @@ class Trainer:
         self.exploration_method = exploration_method
         self.nodes_array = []
         self.renderer = renderer
+        self.isNSteps = isNSteps
         for i in range(1, self.env.num_nodes + 1):
             self.nodes_array.append(i)
 
@@ -83,11 +85,17 @@ class Trainer:
             rand_agent_mod, os.path.basename(rand_agent_name))
         rand_player = rand_agent_class(self.env.num_actions_per_turn, 0)
         return rand_player.get_action(obs)
-    
+    def get_num_wins(self, all_reward):
+        sums = 0
+        for i in all_reward:
+            if i == 1:
+                sums += 1
+        return sums
+
     def loop(self):
         player_list = {
-            'random_actions': 0, 
-            'base_rushV1': 1,
+            'random_actions': 1, 
+            'base_rushV1': 0,
             'Cycle_BRush_Turn25': 0, 
             'Cycle_BRush_Turn50': 0,
             'Cycle_Target_Node': 0,
@@ -116,6 +124,7 @@ class Trainer:
         episode_winrate = 0
         total_games_played = 0
         all_winrate = []
+        all_reward = []
         highest_winrate = 0
         w = tensorboard.SummaryWriter()
         time = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -210,7 +219,9 @@ class Trainer:
             if self.player_num == 0:
                 other_player_id = 1
             if done:
-                
+                if len(all_reward) > 100:
+                    all_reward.pop(0)
+                all_reward.append(reward[self.player_num])
                 for pid in self.players:
                     if pid != self.player_num:
                         #print(plist)
@@ -218,7 +229,8 @@ class Trainer:
                         self._changePlayer(self.player_name, pid)
                         print("Training with {}".format(self.player_name))
                 
-
+                if self.isNSteps:
+                    self.model.finish_nstep(self.memory)
                 next_state = self.env.reset(
                     players=self.players,
                     config_dir=self.config_dir,
@@ -230,19 +242,18 @@ class Trainer:
                 )
                 print("Result on game {}: {}. Number of moves made by the network: {}/{}. Agents: {}".format(
                     len(all_winrate), reward, turn_played_by_network, total_turn_played, self.player_name))
-                if reward[self.player_num] == 1:
-                    reward[self.player_num] = scores[self.player_num] + 3001
-                    num_of_wins += 1
-                else:
-                    reward[self.player_num] = scores[self.player_num] - scores[other_player_id] - 3001
+                # if reward[self.player_num] == 1:
+                #     reward[self.player_num] = scores[self.player_num] + 3001
+                # else:
+                #     reward[self.player_num] = scores[self.player_num] - scores[other_player_id] - 3001
                 total_games_played += 1
-                
-                
-                episode_winrate = (num_of_wins/total_games_played) * 100
+                num_of_wins = self.get_num_wins(all_reward)
+                episode_winrate = (num_of_wins/len(all_reward)) * 100
+        
                 all_winrate.append(episode_winrate)
                 with open(os.path.join(path, "rewards-{}.txt".format(time)), 'a') as fout:
-                    fout.write("Winrate: {}. Number of moves made by the network: {}/{}. Agents: {}\n".format(episode_winrate, turn_played_by_network, total_turn_played, self.player_name))
-                print("Current winrate: {}%".format(episode_winrate))
+                    fout.write("Winrate last 100: {}. Number of moves made by the network: {}/{}. Agents: {}\n".format(episode_winrate, turn_played_by_network, total_turn_played, self.player_name))
+                print("Current winrate last 100: {}%".format(episode_winrate))
                 w.add_scalar("winrate",
                              episode_winrate, global_step=len(all_winrate))
                 turn_played_by_network = 0
@@ -251,16 +262,24 @@ class Trainer:
                     highest_winrate = episode_winrate
                     save_best(self.model, all_winrate,
                               "Evergaldes", self.output_dir)
+            # else:
+            #     reward[self.player_num] = scores[self.player_num] - scores[other_player_id]
+            if self.isNSteps:
+                self.model.append_to_replay(self.memory,
+                    state[self.player_num],
+                    action[self.player_num],
+                    reward[self.player_num],
+                    next_state[self.player_num],
+                    done
+                )
             else:
-                reward[self.player_num] = scores[self.player_num] - scores[other_player_id]
-
-            self.memory.add(
-                state[self.player_num],
-                action[self.player_num],
-                reward[self.player_num],
-                next_state[self.player_num],
-                done
-            )
+                self.memory.add(
+                    state[self.player_num],
+                    action[self.player_num],
+                    reward[self.player_num],
+                    next_state[self.player_num],
+                    done
+                )
             state = next_state
 
             if step > self.start_learning:

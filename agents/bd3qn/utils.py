@@ -34,16 +34,16 @@ def _save(agent, rewards, env_name, output_dir, model_type):
     torch.save(agent.policy_network.state_dict(),
                os.path.join(path, 'model_state_dict'+model_type))
 
-    plt.cla()
-    plt.plot(rewards, c='#bd0e3a', alpha=0.3)
-    plt.plot(gaussian_filter1d(rewards, sigma=5), c='#bd0e3a', label='Winrate')
-    plt.xlabel('Episodes')
-    plt.ylabel('Winrate')
-    plt.title('Branching DDQN ({}): {}'.format(agent.td_target, env_name))
-    plt.savefig(os.path.join(path, 'reward.png'))
+    # plt.cla()
+    # plt.plot(rewards, c='#bd0e3a', alpha=0.3)
+    # plt.plot(gaussian_filter1d(rewards, sigma=5), c='#bd0e3a', label='Winrate')
+    # plt.xlabel('Episodes')
+    # plt.ylabel('Winrate')
+    # plt.title('Branching DDQN ({}): {}'.format(agent.td_target, env_name))
+    # plt.savefig(os.path.join(path, 'reward.png'))
 
-    pd.DataFrame(rewards, columns=['Reward']).to_csv(
-        os.path.join(path, 'rewards.csv'), index=False)
+    # pd.DataFrame(rewards, columns=['Reward']).to_csv(
+    #     os.path.join(path, 'rewards.csv'), index=False)
 
 
 
